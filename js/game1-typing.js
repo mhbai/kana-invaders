@@ -150,18 +150,21 @@ class KanaTypingGame {
   setDifficulty(diff) {
     this.difficulty = diff;
     if (diff === 'easy') {
-      this.baseSpeed = 0.75;
-      this.spawnInterval = 170;
+      this.difficultySpeedFactor = 0.85;
+      this.spawnInterval = 155;
       this.showHints = true;
     } else if (diff === 'normal') {
-      this.baseSpeed = 1.1;
+      this.difficultySpeedFactor = 1.0;
       this.spawnInterval = 135;
       this.showHints = true;
     } else if (diff === 'hard') {
-      this.baseSpeed = 1.6;
-      this.spawnInterval = 100;
+      this.difficultySpeedFactor = 1.25;
+      this.spawnInterval = 105;
       this.showHints = false;
     }
+    const stage = this.getCurrentStage();
+    const stageBase = (stage && stage.speed) ? stage.speed : 0.85;
+    this.baseSpeed = stageBase * (this.difficultySpeedFactor || 1.0);
   }
 
   getCurrentStage() {
@@ -214,12 +217,9 @@ class KanaTypingGame {
     this.lasers = [];
     this.lockedTarget = null;
     this.mistakeList = [];
-    this.spawnTimer = 0;
     this.setDifficulty(this.difficulty);
-
-    if (stage && stage.speed) {
-      this.baseSpeed = stage.speed;
-    }
+    const stageSpeed = (stage && stage.speed) ? stage.speed : 0.85;
+    this.baseSpeed = stageSpeed * (this.difficultySpeedFactor || 1.0);
 
     this.updateHUD();
     this.renderStageMap();
@@ -262,8 +262,9 @@ class KanaTypingGame {
     const padding = 50;
     const x = padding + Math.random() * (this.width - padding * 2 - widthApprox);
 
-    // 稍微根據難度與關卡增加移動速度
-    const speed = (this.baseSpeed + (this.level - 1) * 0.15) * (0.9 + Math.random() * 0.25);
+    // 每個敵人物件隨機微調速度，以當前關卡基礎速度為基準（不跨關累積）
+    const speedVariation = 0.96 + Math.random() * 0.08;
+    const initialSpeed = this.baseSpeed * speedVariation;
 
     const target = {
       id: Date.now() + Math.random(),
@@ -276,7 +277,8 @@ class KanaTypingGame {
       y: -50,
       width: widthApprox,
       height: item.isWord ? 55 : 65,
-      speed: speed,
+      baseSpeed: initialSpeed,
+      speed: initialSpeed,
       currentTyped: '',
       matchedRomaji: null, // 鎖定正在匹配的拼音字串
       hue: item.isWord ? 45 : (item.displayKana.charCodeAt(0) * 17) % 360,
@@ -682,9 +684,15 @@ class KanaTypingGame {
 
   // 主更新循環
   update(deltaTime) {
-    // 難度與敵人生成計時
+    // 計算當前關卡擊破進度 (0.0 ~ 1.0)
+    const stageProgress = Math.min(1.0, this.stageDefeated / Math.max(1, this.stageTargetCount));
+
+    // 關卡內動態平滑加速（從 1.0x 逐步加速至 1.45x），每進入新關卡時自動恢復為 1.0x 初始速度
+    const stageSpeedFactor = 1.0 + stageProgress * 0.45;
+
+    // 敵人生成計時：關卡初始間隔寬鬆，隨進度微調加快，換關時立即重置回初始間隔
     this.spawnTimer++;
-    const currentInterval = Math.max(50, this.spawnInterval - (this.level - 1) * 6);
+    const currentInterval = Math.max(70, Math.round(this.spawnInterval - stageProgress * 40));
     if (this.spawnTimer >= currentInterval) {
       this.spawnTarget();
       this.spawnTimer = 0;
@@ -693,11 +701,13 @@ class KanaTypingGame {
     // 砲台角度緩動
     this.cannon.currentAngle += (this.cannon.targetAngle - this.cannon.currentAngle) * 0.2;
 
-    // 更新目標移動
+    // 更新目標移動（動態應用當前關卡速度曲線）
     const bottomLineY = this.bottomLineY || (this.height - 65);
     for (let i = this.targets.length - 1; i >= 0; i--) {
       const t = this.targets[i];
-      t.y += t.speed;
+      const currentSpeed = (t.baseSpeed || t.speed || this.baseSpeed) * stageSpeedFactor;
+      t.speed = currentSpeed;
+      t.y += currentSpeed;
 
       if (t.hitShake > 0) t.hitShake--;
 
