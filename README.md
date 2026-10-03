@@ -29,7 +29,7 @@
    git add .
    git commit -m "feat: initial release of kana-invaders"
    git branch -M main
-   git remote add origin https://github.com/<您的用戶名>/kana-invaders.git
+   git remote add origin https://github.com/mhbai/kana-invaders.git
    git push -u origin main
    ```
 3. **開啟 GitHub Pages 免費託管**：
@@ -37,7 +37,7 @@
    - 在 **Build and deployment** 來源選擇 **Deploy from a branch**。
    - Branch 選擇 **`main`**，資料夾選擇 **`/(root)`**，點擊 **Save**。
 4. **立即遊玩**：
-   - 約等待 1~2 分鐘後，即可透過 `https://<您的用戶名>.github.io/kana-invaders/` 在任何設備上在線遊玩！
+   - 約等待 1~2 分鐘後，即可透過 `https://mhbai.github.io/kana-invaders/` 在任何設備上在線遊玩！
 
 ---
 
