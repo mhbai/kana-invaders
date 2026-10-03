@@ -258,7 +258,7 @@ class KanaTypingGame {
       id: Date.now() + Math.random(),
       displayKana: item.displayKana,
       subText: item.subText,
-      romajiList: [...item.romaji],
+      romajiList: [...(item.romajiList || item.romaji || [])],
       isWord: item.isWord,
       originalData: item.originalData,
       x: x,
