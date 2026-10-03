@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>👾 Kana Invaders (假名侵略者) v1.1.1 - 日語打字防衛戰</title>
+  <title>👾 Kana Invaders (假名侵略者) v1.2.0 - 日語闖關防衛戰</title>
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
   <!-- Tailwind CSS CDN -->
@@ -16,7 +16,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=1.1.1">
+  <link rel="stylesheet" href="css/style.css?v=1.2.0">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
@@ -30,7 +30,7 @@
         <div>
           <h1 class="text-base font-bold tracking-wide text-white flex items-center gap-2">
             Kana Invaders
-            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.1.1</span>
+            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.2.0</span>
           </h1>
         </div>
       </div>
@@ -38,7 +38,7 @@
       <!-- 4 款遊戲模式導覽 -->
       <nav class="flex items-center gap-1.5 overflow-x-auto py-0.5">
         <button class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-sm shadow-cyan-500/30 flex items-center gap-1.5 border border-cyan-400/30">
-          <span>🚀</span> 假名打字擊墜
+          <span>🚀</span> 假名打字擊墜 (闖關模式)
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
         </button>
         <button onclick="alert('【階段二】平片假名對決・翻牌記憶卡 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
@@ -57,46 +57,24 @@
     </div>
   </header>
 
-  <!-- 主內容區：左右側邊欄 + 中央全高度戰場 -->
+  <!-- 主內容區：左側闖關地圖 + 中央戰場 + 右側數據 -->
   <main class="max-w-[1600px] w-full mx-auto px-3 sm:px-4 py-3 flex-1 flex flex-col lg:flex-row gap-4 items-stretch">
 
-    <!-- === 左側面板：學習設定與模式 === -->
+    <!-- === 左側面板：冒險闖關地圖 === -->
     <aside class="w-full lg:w-64 flex flex-col gap-3 shrink-0">
       
-      <!-- 練習範圍選擇 -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 shadow-md flex flex-col gap-2.5">
-        <div class="flex items-center justify-between">
+      <!-- 闖關戰役地圖列表 -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-md flex flex-col gap-2 flex-1 min-h-[380px]">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-            <span>🎯</span> 學習範圍
+            <span>🗺️</span> 冒險闖關戰役
           </span>
-          <span class="text-[10px] text-slate-500 font-mono">SELECT MODE</span>
+          <span class="text-[10px] text-cyan-400 font-mono">17 STAGES</span>
         </div>
 
-        <div id="modeButtons" class="flex flex-col gap-1.5">
-          <button data-mode="seion" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-cyan-600 text-white border border-cyan-400/40 font-medium transition flex items-center justify-between active">
-            <span>清音 (あ~ん)</span>
-            <span class="text-[10px] opacity-75">基礎入門</span>
-          </button>
-          <button data-mode="dakuon" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
-            <span>濁音・半濁音</span>
-            <span class="text-[10px] text-slate-400">が・ぱ行</span>
-          </button>
-          <button data-mode="yoon" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
-            <span>拗音 (きゃ...)</span>
-            <span class="text-[10px] text-slate-400">複合發音</span>
-          </button>
-          <button data-mode="katakana" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
-            <span>片假名 (ア~ン)</span>
-            <span class="text-[10px] text-slate-400">外來語必練</span>
-          </button>
-          <button data-mode="mixed" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
-            <span>平片混合</span>
-            <span class="text-[10px] text-slate-400">反應強化</span>
-          </button>
-          <button data-mode="words" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500 hover:text-slate-950 transition font-semibold flex items-center justify-between">
-            <span>🌟 實用單字庫</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200 border border-amber-500/30">N5核心</span>
-          </button>
+        <!-- 關卡清單動態注入 -->
+        <div id="stageMapList" class="flex flex-col gap-1.5 overflow-y-auto max-h-[420px] pr-1">
+          <!-- JS 動態生成 -->
         </div>
       </div>
 
@@ -112,16 +90,6 @@
         </select>
       </div>
 
-      <!-- 防護層機制教學小卡 -->
-      <div class="bg-slate-900/80 border border-amber-500/25 rounded-xl p-3 text-xs space-y-1.5 text-slate-300 shadow-md">
-        <div class="font-bold text-amber-400 flex items-center gap-1.5">
-          <span>🛡️</span> 拼音警戒防護層機制
-        </div>
-        <p class="text-[11px] text-slate-400 leading-relaxed">
-          敵人剛降落時<b class="text-cyan-300">完全隱藏羅馬拼音</b>，訓練大腦主動聯想假名！只有當敵人<b class="text-amber-300">越過中線警戒防護層</b>時，才會顯現緊急拼音提示！
-        </p>
-      </div>
-
       <!-- 學習速查工具按鈕 -->
       <div class="flex flex-col gap-2 mt-auto">
         <button onclick="document.getElementById('kanaCheatModal').classList.remove('hidden')" class="w-full px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition border border-slate-700 flex items-center justify-center gap-2">
@@ -134,7 +102,29 @@
     </aside>
 
     <!-- === 中央戰場：最大化垂直高度 Canvas === -->
-    <section class="flex-1 flex flex-col min-w-0 h-[calc(100vh-80px)] min-h-[640px]">
+    <section class="flex-1 flex flex-col min-w-0 h-[calc(100vh-80px)] min-h-[640px] gap-2">
+
+      <!-- 頂部當前關卡資訊與進度條 -->
+      <div class="bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl flex items-center justify-between gap-4 shadow-sm">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shrink-0"></span>
+          <div class="min-w-0">
+            <div id="hudStageTitle" class="text-xs sm:text-sm font-bold text-white truncate">第 1 關：あ行 初探</div>
+            <div id="hudStageSubtitle" class="text-[11px] text-slate-400 truncate">あ・い・う・え・お</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="text-right">
+            <div class="text-[10px] text-slate-400 font-mono">STAGE GOAL</div>
+            <div id="stageProgressText" class="text-xs font-mono font-bold text-amber-400">0 / 10</div>
+          </div>
+          <div class="w-28 sm:w-44 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/60 p-[1px]">
+            <div id="stageProgressBar" class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-amber-400 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="canvas-container relative flex-1 w-full" id="gameContainer">
         <canvas id="gameCanvas"></canvas>
 
@@ -153,7 +143,7 @@
 
           <div class="grid grid-cols-2 gap-3 max-w-md w-full mb-6 text-xs text-slate-300">
             <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
-              <span class="font-bold text-cyan-400">🧠 主動回想</span>：過線前不顯示拼音
+              <span class="font-bold text-cyan-400">🧠 一路推進</span>：一行一關，循序攻克
             </div>
             <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
               <span class="font-bold text-amber-400">🗣️ 真人朗讀</span>：擊中立即聽標準發音
@@ -161,7 +151,7 @@
           </div>
 
           <button id="startGameBtn" class="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-base shadow-xl shadow-cyan-500/25 transition transform hover:scale-105 active:scale-95">
-            開始戰鬥 (Space / Enter)
+            開始闖關 (Space / Enter)
           </button>
         </div>
 
@@ -174,13 +164,59 @@
           </button>
         </div>
 
-        <!-- 3. 遊戲結束與結算覆盤 Modal -->
+        <!-- 3. 關卡突破結算 Modal (Stage Clear) -->
+        <div id="stageClearModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 z-30 hidden overflow-y-auto">
+          <div class="bg-slate-900 border border-cyan-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl text-center ring-1 ring-cyan-500/30">
+            <div class="text-5xl mb-2 animate-bounce">🎉</div>
+            <div class="text-xs uppercase tracking-widest text-cyan-400 font-mono font-bold">STAGE CLEAR!</div>
+            <h3 id="clearStageTitle" class="text-2xl font-black text-white mt-1">第 1 關：あ行 初探</h3>
+            <p id="clearStageSubtitle" class="text-xs text-slate-400 mb-3">あ・い・う・え・お</p>
+
+            <!-- 通關星級評分 -->
+            <div id="clearStars" class="text-4xl text-amber-400 my-3 tracking-widest drop-shadow-md">
+              ⭐⭐⭐
+            </div>
+
+            <!-- 通關回血獎勵 -->
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs mb-5">
+              <span>🛡️ 防衛防護回血 +1</span> <span>❤️</span>
+            </div>
+
+            <!-- 戰況數據 -->
+            <div class="grid grid-cols-3 gap-2 mb-6 text-center text-xs">
+              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700/60">
+                <div class="text-[10px] text-slate-400">目前總分</div>
+                <div id="clearScore" class="text-base font-bold font-mono text-cyan-400">0</div>
+              </div>
+              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700/60">
+                <div class="text-[10px] text-slate-400">最大連擊</div>
+                <div id="clearCombo" class="text-base font-bold font-mono text-amber-400">0x</div>
+              </div>
+              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700/60">
+                <div class="text-[10px] text-slate-400">本關命中率</div>
+                <div id="clearAccuracy" class="text-base font-bold font-mono text-emerald-400">100%</div>
+              </div>
+            </div>
+
+            <!-- 按鈕 -->
+            <div class="flex gap-3">
+              <button id="nextStageBtn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 transition transform hover:scale-105 active:scale-95">
+                進入下一關 ➔ (Space / Enter)
+              </button>
+              <button onclick="window.gameInstance.start(window.gameInstance.currentStageIndex)" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700">
+                重練本關 🔄
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 遊戲失敗 Modal -->
         <div id="gameOverModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 z-30 hidden overflow-y-auto">
           <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
             <div class="text-center mb-5">
               <span class="text-4xl">💥</span>
-              <h3 class="text-2xl font-black text-rose-500 mt-1">防線失守！遊戲結束</h3>
-              <p class="text-xs text-slate-400">勝敗乃兵家常事，來看看本局的學習成果與弱點分析：</p>
+              <h3 class="text-2xl font-black text-rose-500 mt-1">防線失守！闖關中斷</h3>
+              <p class="text-xs text-slate-400">別灰心，來看看本局的弱點假名：</p>
             </div>
 
             <!-- 數據看板 -->
@@ -218,8 +254,8 @@
 
             <!-- 操作按鈕 -->
             <div class="flex gap-3">
-              <button id="restartGameBtn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 transition">
-                再來一局 🔄
+              <button id="restartGameBtn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-400 hover:to-amber-500 text-white font-bold text-sm shadow-lg shadow-rose-500/25 transition">
+                重新挑戰本關 🔄
               </button>
               <button onclick="document.getElementById('kanaCheatModal').classList.remove('hidden')" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold transition border border-slate-700">
                 查閱五十音表 📖
@@ -237,14 +273,14 @@
       <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 shadow-md flex flex-col gap-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-            <span>📊</span> 即時戰況
+            <span>📊</span> 冒險即時數據
           </span>
-          <span class="text-[10px] text-slate-500 font-mono">BATTLE HUD</span>
+          <span class="text-[10px] text-slate-500 font-mono">STATS</span>
         </div>
 
         <!-- 目前分數 -->
         <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/60">
-          <div class="text-[10px] text-slate-400">目前分數 (SCORE)</div>
+          <div class="text-[10px] text-slate-400">累積總分 (SCORE)</div>
           <div id="hudScore" class="text-2xl font-bold font-mono text-cyan-400 mt-0.5">0</div>
         </div>
 
@@ -260,11 +296,11 @@
         <!-- 關卡與生命值 -->
         <div class="grid grid-cols-2 gap-2">
           <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/60">
-            <div class="text-[10px] text-slate-400">關卡 (LEVEL)</div>
+            <div class="text-[10px] text-slate-400">關卡進度</div>
             <div id="hudLevel" class="text-base font-bold font-mono text-purple-400">Lv.1</div>
           </div>
           <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/60">
-            <div class="text-[10px] text-slate-400">擊中率 (ACC)</div>
+            <div class="text-[10px] text-slate-400">命中率</div>
             <div id="hudAccuracy" class="text-base font-bold font-mono text-emerald-400">100%</div>
           </div>
         </div>
@@ -279,7 +315,7 @@
 
         <!-- 擊破統計 -->
         <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/60 flex items-center justify-between">
-          <span class="text-[10px] text-slate-400">擊破敵艦數</span>
+          <span class="text-[10px] text-slate-400">總擊破敵艦數</span>
           <span id="hudDefeated" class="text-xs font-mono font-bold text-slate-200">0</span>
         </div>
       </div>
@@ -303,7 +339,7 @@
           ⏸️ 暫停 (ESC)
         </button>
         <button id="quickRestartBtn" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition border border-slate-700">
-          🔄 重新開始
+          🔄 重試本關
         </button>
       </div>
     </aside>
@@ -346,29 +382,31 @@
   </div>
 
   <!-- 腳本引入（附帶版本防快取） -->
-  <script src="js/data/kana.js?v=1.1.1"></script>
-  <script src="js/data/words.js?v=1.1.1"></script>
-  <script src="js/audio.js?v=1.1.1"></script>
-  <script src="js/game1-typing.js?v=1.1.1"></script>
+  <script src="js/data/kana.js?v=1.2.0"></script>
+  <script src="js/data/words.js?v=1.2.0"></script>
+  <script src="js/data/stages.js?v=1.2.0"></script>
+  <script src="js/audio.js?v=1.2.0"></script>
+  <script src="js/game1-typing.js?v=1.2.0"></script>
 
   <script>
-    console.log('%c👾 Kana Invaders v1.1.1 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
+    console.log('%c👾 Kana Invaders v1.2.0 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
 
     // 遊戲主流程與 UI 互動事件綁定
     window.addEventListener('DOMContentLoaded', () => {
       const game = new KanaTypingGame();
+      window.gameInstance = game;
 
       // 開始按鈕
       document.getElementById('startGameBtn').addEventListener('click', () => {
-        game.start();
+        game.start(game.currentStageIndex);
       });
 
       // 重新開始
       document.getElementById('restartGameBtn').addEventListener('click', () => {
-        game.start();
+        game.start(game.currentStageIndex);
       });
       document.getElementById('quickRestartBtn')?.addEventListener('click', () => {
-        game.start();
+        game.start(game.currentStageIndex);
       });
 
       // 暫停與繼續遊戲
@@ -383,24 +421,6 @@
       const diffSelect = document.getElementById('difficultySelect');
       diffSelect.addEventListener('change', (e) => {
         game.setDifficulty(e.target.value);
-      });
-
-      // 模式按鈕切換
-      const modeButtons = document.querySelectorAll('.mode-btn');
-      modeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          modeButtons.forEach(b => {
-            b.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-400/40');
-            b.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
-          });
-          btn.classList.add('bg-cyan-600', 'text-white', 'border-cyan-400/40');
-          btn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
-          
-          game.setMode(btn.dataset.mode);
-          if (game.isPlaying) {
-            game.start(); // 切換模式時重新開局
-          }
-        });
       });
 
       // 音效與語音開關

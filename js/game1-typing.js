@@ -50,8 +50,16 @@ class KanaTypingGame {
     this.screenShake = 0;
     this.dangerFlash = 0;
 
+    // 關卡闖關推進系統 (Campaign & Stage Clear)
+    this.currentStageIndex = parseInt(localStorage.getItem('kana_current_stage_idx') || '0', 10);
+    this.maxUnlockedStage = parseInt(localStorage.getItem('kana_max_unlocked_stage') || '0', 10);
+    this.stageDefeated = 0;
+    this.stageBreached = 0;
+    this.stageTargetCount = 10;
+
     this.initCanvas();
     this.bindEvents();
+    setTimeout(() => this.renderStageMap(), 50);
   }
 
   initCanvas() {
@@ -88,7 +96,17 @@ class KanaTypingGame {
 
       if (!this.isPlaying || this.isPaused) {
         if (e.key === ' ' || e.key === 'Enter') {
-          if (!this.isPlaying) this.start();
+          const clearModal = document.getElementById('stageClearModal');
+          if (clearModal && !clearModal.classList.contains('hidden')) {
+            clearModal.classList.add('hidden');
+            if (this.currentStageIndex < (window.CAMPAIGN_STAGES?.length || 17) - 1) {
+              this.start(this.currentStageIndex + 1);
+            } else {
+              this.start(0);
+            }
+            return;
+          }
+          if (!this.isPlaying) this.start(this.currentStageIndex);
         }
         return;
       }
@@ -146,68 +164,51 @@ class KanaTypingGame {
     }
   }
 
-  // 取得當前模式的題庫池
-  getQuestionPool() {
-    if (this.mode === 'words') {
-      return window.VOCAB_DATA.map(item => ({
-        displayKana: item.kana,
-        subText: `${item.meaning} [${item.kanji || item.kana}]`,
-        romajiList: item.romaji,
-        isWord: true,
-        originalData: item
-      }));
-    }
-
-    let kanaList = [];
-    if (this.mode === 'seion') {
-      kanaList = window.KANA_DATA.filter(k => k.group === 'seion');
-    } else if (this.mode === 'dakuon') {
-      kanaList = window.KANA_DATA.filter(k => k.group === 'dakuon' || k.group === 'handakuon');
-    } else if (this.mode === 'yoon') {
-      kanaList = window.KANA_DATA.filter(k => k.group === 'yoon');
-    } else if (this.mode === 'katakana') {
-      return window.KANA_DATA.filter(k => k.group === 'seion').map(k => ({
-        displayKana: k.katakana,
-        subText: k.hiragana,
-        romajiList: k.romaji,
-        isWord: false,
-        originalData: k
-      }));
-    } else if (this.mode === 'mixed') {
-      return window.KANA_DATA.map(k => {
-        const isKatakana = Math.random() > 0.5;
-        return {
-          displayKana: isKatakana ? k.katakana : k.hiragana,
-          subText: isKatakana ? `平: ${k.hiragana}` : `片: ${k.katakana}`,
-          romajiList: k.romaji,
-          isWord: false,
-          originalData: k
-        };
-      });
-    }
-
-    return kanaList.map(k => ({
-      displayKana: k.hiragana,
-      subText: k.romaji[0],
-      romajiList: k.romaji,
-      isWord: false,
-      originalData: k
-    }));
+  getCurrentStage() {
+    if (!window.CAMPAIGN_STAGES || window.CAMPAIGN_STAGES.length === 0) return null;
+    return window.CAMPAIGN_STAGES[this.currentStageIndex] || window.CAMPAIGN_STAGES[0];
   }
 
-  start() {
+  // 取得當前關卡的題庫池
+  getQuestionPool() {
+    const stage = this.getCurrentStage();
+    if (!stage || !stage.getPool) return [];
+
+    const raw = stage.getPool();
+    return raw.map(item => {
+      if (item.displayKana) return item;
+      return {
+        displayKana: item.hiragana,
+        subText: item.romaji[0],
+        romajiList: item.romaji,
+        isWord: false,
+        originalData: item
+      };
+    });
+  }
+
+  start(stageIndex = null) {
     window.audioManager.ensureAudioContext();
+
+    if (stageIndex !== null && typeof stageIndex === 'number') {
+      this.currentStageIndex = stageIndex;
+      localStorage.setItem('kana_current_stage_idx', this.currentStageIndex.toString());
+    }
+
+    const stage = this.getCurrentStage();
 
     this.isPlaying = true;
     this.isPaused = false;
-    this.score = 0;
     this.lives = this.maxLives;
     this.combo = 0;
     this.maxCombo = 0;
     this.totalTyped = 0;
     this.correctTyped = 0;
     this.defeatedCount = 0;
-    this.level = 1;
+    this.stageDefeated = 0;
+    this.stageBreached = 0;
+    this.stageTargetCount = stage ? stage.targetCount : 12;
+    this.level = this.currentStageIndex + 1;
     this.targets = [];
     this.particles = [];
     this.lasers = [];
@@ -216,11 +217,23 @@ class KanaTypingGame {
     this.spawnTimer = 0;
     this.setDifficulty(this.difficulty);
 
+    if (stage && stage.speed) {
+      this.baseSpeed = stage.speed;
+    }
+
     this.updateHUD();
+    this.renderStageMap();
 
     document.getElementById('startModal')?.classList.add('hidden');
     document.getElementById('gameOverModal')?.classList.add('hidden');
     document.getElementById('pauseOverlay')?.classList.add('hidden');
+    document.getElementById('stageClearModal')?.classList.add('hidden');
+
+    // 聚焦手機輸入欄
+    document.getElementById('mobileHiddenInput')?.focus();
+
+    document.getElementById('pauseOverlay')?.classList.add('hidden');
+    document.getElementById('stageClearModal')?.classList.add('hidden');
 
     // 聚焦手機輸入欄
     document.getElementById('mobileHiddenInput')?.focus();
@@ -368,13 +381,14 @@ class KanaTypingGame {
 
   // 擊破目標
   destroyTarget(target) {
+    this.stageDefeated++;
     this.defeatedCount++;
     this.combo++;
     if (this.combo > this.maxCombo) {
       this.maxCombo = this.combo;
     }
 
-    // 計分公式：基礎分數 + 連擊加成 + 等級加成
+    // 計分公式：基礎分數 + 連擊加成
     const basePoints = target.isWord ? 200 : 100;
     const comboBonus = Math.min(this.combo * 15, 300);
     const points = basePoints + comboBonus;
@@ -396,13 +410,12 @@ class KanaTypingGame {
     // 從陣列中移除
     this.targets = this.targets.filter(t => t.id !== target.id);
 
-    // 每擊破 10 個目標升一級
-    if (this.defeatedCount % 10 === 0) {
-      this.level++;
-      window.audioManager.playLevelUp();
-    }
-
     this.updateHUD();
+
+    // 檢查是否達成通關條件
+    if (this.stageDefeated >= this.stageTargetCount) {
+      this.onStageClear();
+    }
   }
 
   // 爆炸粒子
@@ -427,6 +440,7 @@ class KanaTypingGame {
   // 目標突破防線（到達底部）
   onTargetBreach(target) {
     this.lives--;
+    this.stageBreached++;
     this.combo = 0;
     this.screenShake = 12;
     this.dangerFlash = 0.4;
@@ -496,6 +510,116 @@ class KanaTypingGame {
     document.getElementById('gameOverModal')?.classList.remove('hidden');
   }
 
+  // 關卡突破結算 (Stage Clear)
+  onStageClear() {
+    this.isPlaying = false;
+    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+
+    window.audioManager.playLevelUp();
+
+    // 評定星級 (3星: 0失誤, 2星: 1~2失誤, 1星: 3+失誤)
+    let stars = 3;
+    if (this.stageBreached >= 3) stars = 1;
+    else if (this.stageBreached >= 1) stars = 2;
+
+    const stage = this.getCurrentStage();
+
+    // 保存星級與解鎖進度
+    if (stage) {
+      const starKey = `kana_stage_stars_${stage.id}`;
+      const oldStars = parseInt(localStorage.getItem(starKey) || '0', 10);
+      if (stars > oldStars) {
+        localStorage.setItem(starKey, stars.toString());
+      }
+    }
+
+    const totalStages = window.CAMPAIGN_STAGES?.length || 17;
+    if (this.currentStageIndex + 1 > this.maxUnlockedStage) {
+      this.maxUnlockedStage = Math.min(this.currentStageIndex + 1, totalStages - 1);
+      localStorage.setItem('kana_max_unlocked_stage', this.maxUnlockedStage.toString());
+    }
+
+    // 獎勵：通關回血 +1（最多至 maxLives）
+    if (this.lives < this.maxLives) {
+      this.lives++;
+    }
+
+    const modal = document.getElementById('stageClearModal');
+    if (modal && stage) {
+      document.getElementById('clearStageTitle').textContent = stage.name;
+      document.getElementById('clearStageSubtitle').textContent = stage.subtitle;
+      document.getElementById('clearStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+      document.getElementById('clearScore').textContent = this.score;
+      document.getElementById('clearDefeated').textContent = `${this.stageDefeated} / ${this.stageTargetCount}`;
+      document.getElementById('clearCombo').textContent = `${this.maxCombo}x`;
+
+      const acc = this.totalTyped > 0 ? Math.round((this.correctTyped / this.totalTyped) * 100) : 100;
+      document.getElementById('clearAccuracy').textContent = `${acc}%`;
+
+      const nextBtn = document.getElementById('nextStageBtn');
+      if (nextBtn) {
+        if (this.currentStageIndex < totalStages - 1) {
+          nextBtn.innerHTML = '進入下一關 ➔ (Space / Enter)';
+          nextBtn.onclick = () => {
+            modal.classList.add('hidden');
+            this.start(this.currentStageIndex + 1);
+          };
+        } else {
+          nextBtn.innerHTML = '🏆 恭喜破台！全部通關！再玩一次！';
+          nextBtn.onclick = () => {
+            modal.classList.add('hidden');
+            this.start(0);
+          };
+        }
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    this.renderStageMap();
+    this.updateHUD();
+  }
+
+  // 渲染左側闖關地圖
+  renderStageMap() {
+    const listEl = document.getElementById('stageMapList');
+    if (!listEl || !window.CAMPAIGN_STAGES) return;
+
+    listEl.innerHTML = window.CAMPAIGN_STAGES.map((st, idx) => {
+      const isCurrent = idx === this.currentStageIndex;
+      const isUnlocked = idx <= this.maxUnlockedStage;
+      const stars = parseInt(localStorage.getItem(`kana_stage_stars_${st.id}`) || '0', 10);
+      const starIcons = stars > 0 ? '⭐'.repeat(stars) : '';
+
+      let borderClass = 'border-slate-800 bg-slate-900/40 opacity-50 cursor-not-allowed';
+      let titleClass = 'text-slate-500';
+      if (isCurrent) {
+        borderClass = 'border-cyan-400 bg-cyan-950/60 shadow-sm shadow-cyan-500/25 ring-1 ring-cyan-400/50';
+        titleClass = 'text-cyan-300 font-bold';
+      } else if (isUnlocked) {
+        borderClass = 'border-slate-700/80 hover:border-slate-500 bg-slate-800/70 hover:bg-slate-800 cursor-pointer';
+        titleClass = 'text-slate-200';
+      }
+
+      return `
+        <div onclick="${isUnlocked ? `window.gameInstance.start(${idx})` : ''}" class="p-2 rounded-lg border transition flex items-center justify-between text-xs ${borderClass}">
+          <div class="flex flex-col min-w-0 pr-1 text-left">
+            <span class="truncate ${titleClass}">${st.name}</span>
+            <span class="text-[10px] text-slate-400 truncate">${st.subtitle}</span>
+          </div>
+          <div class="shrink-0 flex items-center font-mono text-[11px]">
+            ${!isUnlocked ? '<span class="text-slate-600 text-xs">🔒</span>' : (starIcons || '<span class="text-slate-500 text-[10px]">未破</span>')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const activeEl = listEl.querySelector('.ring-cyan-400\\/50');
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
   updateHUD() {
     const scoreEl = document.getElementById('hudScore');
     const comboEl = document.getElementById('hudCombo');
@@ -511,7 +635,7 @@ class KanaTypingGame {
         comboEl.classList.remove('scale-125', 'text-amber-400');
       }
     }
-    if (levelEl) levelEl.textContent = `Lv.${this.level}`;
+    if (levelEl) levelEl.textContent = `Lv.${this.currentStageIndex + 1}`;
 
     if (livesContainer) {
       let heartsHtml = '';
@@ -530,6 +654,21 @@ class KanaTypingGame {
     }
     if (defeatedEl) {
       defeatedEl.textContent = this.defeatedCount;
+    }
+
+    // 關卡名稱與當前關卡擊破進度條
+    const stage = this.getCurrentStage();
+    const stageTitleEl = document.getElementById('hudStageTitle');
+    const stageSubtitleEl = document.getElementById('hudStageSubtitle');
+    const progressTextEl = document.getElementById('stageProgressText');
+    const progressBarEl = document.getElementById('stageProgressBar');
+
+    if (stageTitleEl && stage) stageTitleEl.textContent = stage.name;
+    if (stageSubtitleEl && stage) stageSubtitleEl.textContent = stage.subtitle;
+    if (progressTextEl) progressTextEl.textContent = `${this.stageDefeated} / ${this.stageTargetCount}`;
+    if (progressBarEl) {
+      const pct = Math.min(100, Math.round((this.stageDefeated / this.stageTargetCount) * 100));
+      progressBarEl.style.width = `${pct}%`;
     }
   }
 
