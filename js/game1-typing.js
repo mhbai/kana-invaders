@@ -68,6 +68,10 @@ class KanaTypingGame {
       this.width = rect.width;
       this.height = rect.height;
 
+      // 拼音提示警戒線（約 55% 畫面高度，過線後才顯示拼音）
+      this.hintLineY = this.height * 0.54;
+      this.bottomLineY = this.height - 65;
+
       this.cannon.x = this.width / 2;
       this.cannon.y = this.height - 40;
     };
@@ -516,6 +520,17 @@ class KanaTypingGame {
       }
       livesContainer.innerHTML = heartsHtml;
     }
+
+    // 側邊欄額外統計：命中率與擊破數
+    const accuracyEl = document.getElementById('hudAccuracy');
+    const defeatedEl = document.getElementById('hudDefeated');
+    if (accuracyEl) {
+      const acc = this.totalTyped > 0 ? Math.round((this.correctTyped / this.totalTyped) * 100) : 100;
+      accuracyEl.textContent = `${acc}%`;
+    }
+    if (defeatedEl) {
+      defeatedEl.textContent = this.defeatedCount;
+    }
   }
 
   // 主更新循環
@@ -532,7 +547,7 @@ class KanaTypingGame {
     this.cannon.currentAngle += (this.cannon.targetAngle - this.cannon.currentAngle) * 0.2;
 
     // 更新目標移動
-    const bottomLineY = this.height - 65;
+    const bottomLineY = this.bottomLineY || (this.height - 65);
     for (let i = this.targets.length - 1; i >= 0; i--) {
       const t = this.targets[i];
       t.y += t.speed;
@@ -592,9 +607,28 @@ class KanaTypingGame {
     // 繪製科技星光微粒背景
     this.renderStarfield();
 
-    // 繪製底線防禦網 (Defense Baseline)
-    const bottomLineY = this.height - 65;
-    this.ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+    // 1. 繪製「拼音警戒線」(Romaji Alert / Hint Line)
+    const hintLineY = this.hintLineY || (this.height * 0.54);
+    this.ctx.save();
+    this.ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.setLineDash([6, 5]);
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, hintLineY);
+    this.ctx.lineTo(this.width, hintLineY);
+    this.ctx.stroke();
+    this.ctx.setLineDash([]);
+
+    this.ctx.fillStyle = 'rgba(245, 158, 11, 0.65)';
+    this.ctx.font = '10px monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('⚠️ 警戒防護層 · 進入後顯現拼音提示 ⚠️', this.width / 2, hintLineY - 6);
+    this.ctx.restore();
+
+    // 2. 繪製「底線防禦網」(Defense Baseline)
+    const bottomLineY = this.bottomLineY || (this.height - 65);
+    this.ctx.save();
+    this.ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
     this.ctx.lineWidth = 2;
     this.ctx.setLineDash([8, 6]);
     this.ctx.beginPath();
@@ -603,11 +637,11 @@ class KanaTypingGame {
     this.ctx.stroke();
     this.ctx.setLineDash([]);
 
-    // 繪製底線警告文字
-    this.ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+    this.ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
     this.ctx.font = '10px monospace';
     this.ctx.textAlign = 'center';
     this.ctx.fillText('⚡ DEFENSE PERIMETER ⚡', this.width / 2, bottomLineY + 14);
+    this.ctx.restore();
 
     // 繪製掉落目標
     this.targets.forEach(t => this.renderTarget(t));
@@ -738,7 +772,7 @@ class KanaTypingGame {
     // 3. 拼音比對進度與提示
     const defaultRomaji = t.matchedRomaji || t.romajiList[0];
     const typed = t.currentTyped;
-
+    const isPastHintLine = (t.y + t.height >= (this.hintLineY || this.height * 0.54));
     const hintY = t.isWord ? drawY + 42 : drawY + 50;
 
     if (typed.length > 0) {
@@ -759,14 +793,24 @@ class KanaTypingGame {
       // 剩餘字母（淺灰色）
       this.ctx.fillStyle = '#94a3b8';
       this.ctx.fillText(remainingPart, curX, hintY);
-    } else if (this.showHints) {
-      // 尚未輸入：顯示全拼音或中文提示
-      this.ctx.font = '11px monospace';
-      this.ctx.fillStyle = '#64748b';
+    } else if (isPastHintLine && this.showHints) {
+      // 尚未輸入，但已過「拼音警戒防護層」：亮起緊急拼音提示！
+      this.ctx.font = 'bold 11px monospace';
+      this.ctx.fillStyle = '#fbbf24'; // 醒目琥珀黃提示
       const hintText = t.isWord 
-        ? `${defaultRomaji} · ${t.subText.split(' [')[0]}`
-        : defaultRomaji;
+        ? `⚡ ${defaultRomaji} · ${t.subText.split(' [')[0]}`
+        : `⚡ ${defaultRomaji}`;
       this.ctx.fillText(hintText, drawX + t.width / 2, hintY);
+    } else if (t.isWord) {
+      // 尚未過警戒線且為單字：只顯示中文意思提供語意聯想，隱藏羅馬拼音！
+      this.ctx.font = '11px sans-serif';
+      this.ctx.fillStyle = '#64748b'; // 低調灰
+      this.ctx.fillText(t.subText.split(' [')[0], drawX + t.width / 2, hintY);
+    } else {
+      // 五十音在過線前完全不顯示拼音！強迫大腦主動聯想發音！
+      this.ctx.font = '10px monospace';
+      this.ctx.fillStyle = '#334155';
+      this.ctx.fillText('• • •', drawX + t.width / 2, hintY);
     }
 
     // 鎖定角標指示 (Lock-on cursor)

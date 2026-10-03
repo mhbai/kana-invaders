@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>👾 Kana Invaders (假名侵略者) - 日語打字防衛戰</title>
+  <title>👾 Kana Invaders (假名侵略者) v1.1.0 - 日語打字防衛戰</title>
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
   <!-- Tailwind CSS CDN -->
@@ -16,247 +16,297 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=1.0.1">
+  <link rel="stylesheet" href="css/style.css?v=1.1.0">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
-  <!-- 頂部導覽與遊戲選單 -->
+  <!-- 頂部導覽列 -->
   <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+    <div class="max-w-[1600px] mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xl shadow-lg shadow-cyan-500/20">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xl shadow-md shadow-cyan-500/20">
           👾
         </div>
         <div>
-          <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
+          <h1 class="text-base font-bold tracking-wide text-white flex items-center gap-2">
             Kana Invaders
-            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30">v1.0.1</span>
+            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.1.0</span>
           </h1>
-          <p class="text-xs text-slate-400">假名侵略者 · 敲擊鍵盤消滅降落假名與單字</p>
         </div>
       </div>
 
-      <!-- 4 款遊戲模式切換導覽 -->
-      <nav class="flex items-center gap-1.5 overflow-x-auto py-1">
-        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-sm shadow-cyan-500/30 flex items-center gap-1.5 border border-cyan-400/30">
+      <!-- 4 款遊戲模式導覽 -->
+      <nav class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+        <button class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-sm shadow-cyan-500/30 flex items-center gap-1.5 border border-cyan-400/30">
           <span>🚀</span> 假名打字擊墜
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
         </button>
-        <button onclick="alert('【階段二】平片假名對決・翻牌記憶卡 目前正在規劃開發中，敬請期待！')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
+        <button onclick="alert('【階段二】平片假名對決・翻牌記憶卡 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
           <span>🎴</span> 翻牌記憶
           <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
         </button>
-        <button onclick="alert('【階段三】假名單字 Wordle 目前正在規劃開發中，敬請期待！')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
+        <button onclick="alert('【階段三】假名單字 Wordle 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
           <span>🟩</span> 假名 Wordle
           <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
         </button>
-        <button onclick="alert('【階段四】勇者假名地下城 RPG 目前正在規劃開發中，敬請期待！')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
+        <button onclick="alert('【階段四】勇者假名地下城 RPG 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
           <span>⚔️</span> 地下城 RPG
           <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
         </button>
       </nav>
-
-      <!-- 音訊控制 -->
-      <div class="flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs">
-        <label class="flex items-center gap-1 cursor-pointer">
-          <input type="checkbox" id="sfxToggle" checked class="rounded accent-cyan-500">
-          <span>🔊 音效</span>
-        </label>
-        <label class="flex items-center gap-1 cursor-pointer">
-          <input type="checkbox" id="voiceToggle" checked class="rounded accent-cyan-500">
-          <span>🗣️ 真人朗讀</span>
-        </label>
-      </div>
     </div>
   </header>
 
-  <!-- 主內容區 -->
-  <main class="max-w-6xl mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
+  <!-- 主內容區：左右側邊欄 + 中央全高度戰場 -->
+  <main class="max-w-[1600px] w-full mx-auto px-3 sm:px-4 py-3 flex-1 flex flex-col lg:flex-row gap-4 items-stretch">
 
-    <!-- 遊戲模式與難度設定條 -->
-    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-md">
+    <!-- === 左側面板：學習設定與模式 === -->
+    <aside class="w-full lg:w-64 flex flex-col gap-3 shrink-0">
+      
       <!-- 練習範圍選擇 -->
-      <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-xs text-slate-400 font-medium">學習範圍：</span>
-        <div id="modeButtons" class="flex flex-wrap gap-1.5">
-          <button data-mode="seion" class="mode-btn px-2.5 py-1 text-xs rounded-md bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 font-medium hover:bg-cyan-600 hover:text-white transition active">
-            清音 (あ~ん)
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 shadow-md flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            <span>🎯</span> 學習範圍
+          </span>
+          <span class="text-[10px] text-slate-500 font-mono">SELECT MODE</span>
+        </div>
+
+        <div id="modeButtons" class="flex flex-col gap-1.5">
+          <button data-mode="seion" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-cyan-600 text-white border border-cyan-400/40 font-medium transition flex items-center justify-between active">
+            <span>清音 (あ~ん)</span>
+            <span class="text-[10px] opacity-75">基礎入門</span>
           </button>
-          <button data-mode="dakuon" class="mode-btn px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">
-            濁音・半濁音
+          <button data-mode="dakuon" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
+            <span>濁音・半濁音</span>
+            <span class="text-[10px] text-slate-400">が・ぱ行</span>
           </button>
-          <button data-mode="yoon" class="mode-btn px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">
-            拗音 (きゃ...)
+          <button data-mode="yoon" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
+            <span>拗音 (きゃ...)</span>
+            <span class="text-[10px] text-slate-400">複合發音</span>
           </button>
-          <button data-mode="katakana" class="mode-btn px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">
-            片假名 (ア~ン)
+          <button data-mode="katakana" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
+            <span>片假名 (ア~ン)</span>
+            <span class="text-[10px] text-slate-400">外來語必練</span>
           </button>
-          <button data-mode="mixed" class="mode-btn px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">
-            平片混合
+          <button data-mode="mixed" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition flex items-center justify-between">
+            <span>平片混合</span>
+            <span class="text-[10px] text-slate-400">反應強化</span>
           </button>
-          <button data-mode="words" class="mode-btn px-2.5 py-1 text-xs rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500 hover:text-slate-900 transition">
-            🌟 實用單字庫 (N5)
+          <button data-mode="words" class="mode-btn text-left px-3 py-2 text-xs rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500 hover:text-slate-950 transition font-semibold flex items-center justify-between">
+            <span>🌟 實用單字庫</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200 border border-amber-500/30">N5核心</span>
           </button>
         </div>
       </div>
 
       <!-- 難度選擇 -->
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-slate-400 font-medium">難度：</span>
-        <select id="difficultySelect" class="bg-slate-800 border border-slate-700 text-xs rounded-md px-2.5 py-1 text-slate-200 focus:outline-none focus:border-cyan-500">
-          <option value="easy">輕鬆模式 (含拼音提示)</option>
-          <option value="normal" selected>標準模式 (推薦)</option>
-          <option value="hard">極速挑戰 (無提示)</option>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-md">
+        <label class="text-xs text-slate-300 font-semibold mb-1.5 block flex items-center gap-1.5">
+          <span>⚙️</span> 遊戲難度
+        </label>
+        <select id="difficultySelect" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-cyan-500">
+          <option value="easy">輕鬆模式 (掉落慢 · 警戒線後有提示)</option>
+          <option value="normal" selected>標準模式 (推薦 · 警戒線後有提示)</option>
+          <option value="hard">極速挑戰 (掉落快 · 完全無提示)</option>
         </select>
       </div>
-    </div>
 
-    <!-- 遊戲即時狀態 HUD -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-        <div>
-          <div class="text-[11px] text-slate-400">目前分數</div>
-          <div id="hudScore" class="text-2xl font-bold font-mono text-cyan-400">0</div>
+      <!-- 防護層機制教學小卡 -->
+      <div class="bg-slate-900/80 border border-amber-500/25 rounded-xl p-3 text-xs space-y-1.5 text-slate-300 shadow-md">
+        <div class="font-bold text-amber-400 flex items-center gap-1.5">
+          <span>🛡️</span> 拼音警戒防護層機制
         </div>
-        <div class="text-2xl">🎯</div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          敵人剛降落時<b class="text-cyan-300">完全隱藏羅馬拼音</b>，訓練大腦主動聯想假名！只有當敵人<b class="text-amber-300">越過中線警戒防護層</b>時，才會顯現緊急拼音提示！
+        </p>
       </div>
 
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-        <div>
-          <div class="text-[11px] text-slate-400">連擊 COMBO</div>
-          <div id="hudCombo" class="text-2xl font-bold font-mono text-amber-400 transition transform">0x</div>
-        </div>
-        <div class="text-2xl">🔥</div>
+      <!-- 學習速查工具按鈕 -->
+      <div class="flex flex-col gap-2 mt-auto">
+        <button onclick="document.getElementById('kanaCheatModal').classList.remove('hidden')" class="w-full px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition border border-slate-700 flex items-center justify-center gap-2">
+          <span>📖</span> 五十音對照速查庫
+        </button>
+        <button onclick="document.getElementById('vocabListModal').classList.remove('hidden')" class="w-full px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition border border-slate-700 flex items-center justify-center gap-2">
+          <span>📚</span> 實用單字庫預覽
+        </button>
       </div>
+    </aside>
 
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-        <div>
-          <div class="text-[11px] text-slate-400">當前關卡</div>
-          <div id="hudLevel" class="text-2xl font-bold font-mono text-purple-400">Lv.1</div>
+    <!-- === 中央戰場：最大化垂直高度 Canvas === -->
+    <section class="flex-1 flex flex-col min-w-0 h-[calc(100vh-80px)] min-h-[640px]">
+      <div class="canvas-container relative flex-1 w-full" id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- 手機端隱形輸入（點擊畫布彈出輸入法） -->
+        <input type="text" id="mobileHiddenInput" class="opacity-0 absolute -top-96 left-0 pointer-events-none" autocomplete="off" autocapitalize="off" spellcheck="false">
+
+        <!-- 1. 開始遊戲介面 -->
+        <div id="startModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-20">
+          <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-3xl mb-4 shadow-lg shadow-cyan-500/10">
+            👾
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Kana Invaders</h2>
+          <p class="text-sm text-slate-300 max-w-md mb-6 leading-relaxed">
+            敵艦正從上方降落！請根據敵艦身上的<strong class="text-cyan-400">假名或單字</strong>，透過鍵盤敲擊<strong class="text-amber-300">羅馬拼音</strong>發動雷射防衛砲！
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 max-w-md w-full mb-6 text-xs text-slate-300">
+            <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
+              <span class="font-bold text-cyan-400">🧠 主動回想</span>：過線前不顯示拼音
+            </div>
+            <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
+              <span class="font-bold text-amber-400">🗣️ 真人朗讀</span>：擊中立即聽標準發音
+            </div>
+          </div>
+
+          <button id="startGameBtn" class="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-base shadow-xl shadow-cyan-500/25 transition transform hover:scale-105 active:scale-95">
+            開始戰鬥 (Space / Enter)
+          </button>
         </div>
-        <div class="text-2xl">⭐</div>
-      </div>
 
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-        <div>
-          <div class="text-[11px] text-slate-400">生命防禦</div>
-          <div id="hudLives" class="flex gap-1 text-lg">
+        <!-- 2. 暫停畫面 -->
+        <div id="pauseOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-20 hidden">
+          <h3 class="text-3xl font-black text-amber-400 mb-2">遊戲已暫停</h3>
+          <p class="text-sm text-slate-300 mb-6">按 ESC 或點擊下方按鈕繼續</p>
+          <button id="resumeGameBtn" class="px-6 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm transition">
+            繼續遊戲
+          </button>
+        </div>
+
+        <!-- 3. 遊戲結束與結算覆盤 Modal -->
+        <div id="gameOverModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 z-30 hidden overflow-y-auto">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+            <div class="text-center mb-5">
+              <span class="text-4xl">💥</span>
+              <h3 class="text-2xl font-black text-rose-500 mt-1">防線失守！遊戲結束</h3>
+              <p class="text-xs text-slate-400">勝敗乃兵家常事，來看看本局的學習成果與弱點分析：</p>
+            </div>
+
+            <!-- 數據看板 -->
+            <div class="grid grid-cols-4 gap-2 mb-5 text-center">
+              <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
+                <div class="text-[10px] text-slate-400">總得分</div>
+                <div id="finalScore" class="text-lg font-bold font-mono text-cyan-400">0</div>
+              </div>
+              <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
+                <div class="text-[10px] text-slate-400">最高分</div>
+                <div id="finalHighScore" class="text-lg font-bold font-mono text-amber-400">0</div>
+              </div>
+              <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
+                <div class="text-[10px] text-slate-400">最大連擊</div>
+                <div id="finalCombo" class="text-lg font-bold font-mono text-purple-400">0</div>
+              </div>
+              <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
+                <div class="text-[10px] text-slate-400">擊中率</div>
+                <div id="finalAccuracy" class="text-lg font-bold font-mono text-emerald-400">0%</div>
+              </div>
+            </div>
+
+            <!-- 弱點複習清單 -->
+            <div class="mb-5">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs font-bold text-amber-400 flex items-center gap-1">
+                  <span>📝</span> 本局突破防線的弱點清單（點擊發音溫習）：
+                </h4>
+                <span id="finalDefeated" class="text-xs text-slate-400">擊破數: 0</span>
+              </div>
+              <div id="mistakeReviewList" class="max-h-44 overflow-y-auto space-y-1.5 pr-1 text-xs">
+                <!-- 動態填充 -->
+              </div>
+            </div>
+
+            <!-- 操作按鈕 -->
+            <div class="flex gap-3">
+              <button id="restartGameBtn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 transition">
+                再來一局 🔄
+              </button>
+              <button onclick="document.getElementById('kanaCheatModal').classList.remove('hidden')" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold transition border border-slate-700">
+                查閱五十音表 📖
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- === 右側面板：戰況 HUD 與控制 === -->
+    <aside class="w-full lg:w-56 flex flex-col gap-3 shrink-0">
+      
+      <!-- 戰況數據面板 -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 shadow-md flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            <span>📊</span> 即時戰況
+          </span>
+          <span class="text-[10px] text-slate-500 font-mono">BATTLE HUD</span>
+        </div>
+
+        <!-- 目前分數 -->
+        <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/60">
+          <div class="text-[10px] text-slate-400">目前分數 (SCORE)</div>
+          <div id="hudScore" class="text-2xl font-bold font-mono text-cyan-400 mt-0.5">0</div>
+        </div>
+
+        <!-- 連擊 COMBO -->
+        <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/60 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] text-slate-400">連擊 (COMBO)</div>
+            <div id="hudCombo" class="text-xl font-bold font-mono text-amber-400 transition transform">0x</div>
+          </div>
+          <div class="text-xl">🔥</div>
+        </div>
+
+        <!-- 關卡與生命值 -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/60">
+            <div class="text-[10px] text-slate-400">關卡 (LEVEL)</div>
+            <div id="hudLevel" class="text-base font-bold font-mono text-purple-400">Lv.1</div>
+          </div>
+          <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/60">
+            <div class="text-[10px] text-slate-400">擊中率 (ACC)</div>
+            <div id="hudAccuracy" class="text-base font-bold font-mono text-emerald-400">100%</div>
+          </div>
+        </div>
+
+        <!-- 生命值防禦 -->
+        <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/60">
+          <div class="text-[10px] text-slate-400 mb-1">防衛生命 (SHIELD)</div>
+          <div id="hudLives" class="flex gap-1 text-base">
             <span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span><span>❤️</span>
           </div>
         </div>
-        <div class="text-2xl">🛡️</div>
-      </div>
-    </div>
 
-    <!-- 遊戲畫布舞台 -->
-    <div class="canvas-container" id="gameContainer">
-      <canvas id="gameCanvas"></canvas>
-
-      <!-- 手機端隱形輸入（點擊畫布彈出輸入法） -->
-      <input type="text" id="mobileHiddenInput" class="opacity-0 absolute -top-96 left-0 pointer-events-none" autocomplete="off" autocapitalize="off" spellcheck="false">
-
-      <!-- 1. 開始遊戲介面 -->
-      <div id="startModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-20">
-        <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-3xl mb-4 shadow-lg shadow-cyan-500/10">
-          🚀
-        </div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">假名打字擊墜戰</h2>
-        <p class="text-sm text-slate-300 max-w-md mb-6 leading-relaxed">
-          敵人正從上方降落！請根據敵人身上的<strong class="text-cyan-400">日文假名或單字</strong>，透過鍵盤輸入對應的<strong class="text-amber-300">羅馬拼音</strong>發動雷射擊破！
-        </p>
-
-        <div class="grid grid-cols-2 gap-3 max-w-md w-full mb-6 text-xs text-slate-300">
-          <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
-            <span class="font-bold text-cyan-400">鍵盤輸入</span>：敲擊字母如 a, ka, shi
-          </div>
-          <div class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/50">
-            <span class="font-bold text-amber-400">真人朗讀</span>：擊中立即聽正確發音
-          </div>
-        </div>
-
-        <button id="startGameBtn" class="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-base shadow-xl shadow-cyan-500/25 transition transform hover:scale-105 active:scale-95">
-          開始戰鬥 (Space / Enter)
-        </button>
-      </div>
-
-      <!-- 2. 暫停畫面 -->
-      <div id="pauseOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-20 hidden">
-        <h3 class="text-3xl font-black text-amber-400 mb-2">遊戲已暫停</h3>
-        <p class="text-sm text-slate-300 mb-6">按 ESC 或點擊下方按鈕繼續</p>
-        <button id="resumeGameBtn" class="px-6 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm transition">
-          繼續遊戲
-        </button>
-      </div>
-
-      <!-- 3. 遊戲結束與結算覆盤 Modal -->
-      <div id="gameOverModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 z-30 hidden overflow-y-auto">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-          <div class="text-center mb-5">
-            <span class="text-4xl">💥</span>
-            <h3 class="text-2xl font-black text-rose-500 mt-1">防線失守！遊戲結束</h3>
-            <p class="text-xs text-slate-400">勝敗乃兵家常事，來看看本局的學習成果與弱點分析：</p>
-          </div>
-
-          <!-- 數據看板 -->
-          <div class="grid grid-cols-4 gap-2 mb-5 text-center">
-            <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
-              <div class="text-[10px] text-slate-400">總得分</div>
-              <div id="finalScore" class="text-lg font-bold font-mono text-cyan-400">0</div>
-            </div>
-            <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
-              <div class="text-[10px] text-slate-400">最高分</div>
-              <div id="finalHighScore" class="text-lg font-bold font-mono text-amber-400">0</div>
-            </div>
-            <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
-              <div class="text-[10px] text-slate-400">最大連擊</div>
-              <div id="finalCombo" class="text-lg font-bold font-mono text-purple-400">0</div>
-            </div>
-            <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60">
-              <div class="text-[10px] text-slate-400">擊中率</div>
-              <div id="finalAccuracy" class="text-lg font-bold font-mono text-emerald-400">0%</div>
-            </div>
-          </div>
-
-          <!-- 弱點複習清單 (Mistake Review List) -->
-          <div class="mb-5">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="text-xs font-bold text-amber-400 flex items-center gap-1">
-                <span>📝</span> 本局突破防線的弱點清單（點擊發音溫習）：
-              </h4>
-              <span id="finalDefeated" class="text-xs text-slate-400">擊破數: 0</span>
-            </div>
-            <div id="mistakeReviewList" class="max-h-44 overflow-y-auto space-y-1.5 pr-1 text-xs">
-              <!-- 動態填充 -->
-            </div>
-          </div>
-
-          <!-- 操作按鈕 -->
-          <div class="flex gap-3">
-            <button id="restartGameBtn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 transition">
-              再來一局 🔄
-            </button>
-            <button onclick="document.getElementById('kanaCheatModal').classList.remove('hidden')" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold transition border border-slate-700">
-              查閱五十音表 📖
-            </button>
-          </div>
+        <!-- 擊破統計 -->
+        <div class="bg-slate-800/60 p-2 rounded-lg border border-slate-700/60 flex items-center justify-between">
+          <span class="text-[10px] text-slate-400">擊破敵艦數</span>
+          <span id="hudDefeated" class="text-xs font-mono font-bold text-slate-200">0</span>
         </div>
       </div>
-    </div>
 
-    <!-- 底部功能區：五十音速查表 & 詞彙庫預覽開關 -->
-    <div class="flex flex-wrap gap-3 items-center justify-between text-xs text-slate-400 border-t border-slate-800 pt-4">
-      <div class="flex items-center gap-2">
-        <span>💡 小秘訣：支援容錯拼音！如 <code class="text-cyan-300">shi / si</code>、<code class="text-cyan-300">tsu / tu</code>、<code class="text-cyan-300">chi / ti</code> 皆可擊破。</span>
+      <!-- 音訊設定 -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-md space-y-2">
+        <div class="text-[11px] font-semibold text-slate-300 mb-1">🔊 音訊回饋設定</div>
+        <label class="flex items-center justify-between text-xs cursor-pointer p-1.5 rounded hover:bg-slate-800/60 transition">
+          <span class="text-slate-300">街機打擊音效</span>
+          <input type="checkbox" id="sfxToggle" checked class="rounded accent-cyan-500 w-4 h-4">
+        </label>
+        <label class="flex items-center justify-between text-xs cursor-pointer p-1.5 rounded hover:bg-slate-800/60 transition">
+          <span class="text-slate-300">日語真人朗讀</span>
+          <input type="checkbox" id="voiceToggle" checked class="rounded accent-cyan-500 w-4 h-4">
+        </label>
       </div>
-      <div class="flex gap-2">
-        <button onclick="document.getElementById('kanaCheatModal').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition border border-slate-700/80 flex items-center gap-1.5">
-          <span>📖</span> 五十音對照速查表
+
+      <!-- 快速控制 -->
+      <div class="grid grid-cols-2 gap-2 mt-auto">
+        <button id="quickPauseBtn" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition border border-slate-700">
+          ⏸️ 暫停 (ESC)
         </button>
-        <button onclick="document.getElementById('vocabListModal').classList.remove('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition border border-slate-700/80 flex items-center gap-1.5">
-          <span>📚</span> 實用單字庫 (100+)
+        <button id="quickRestartBtn" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition border border-slate-700">
+          🔄 重新開始
         </button>
       </div>
-    </div>
+    </aside>
   </main>
 
   <!-- 浮動彈窗 1：五十音對照速查表 (含點擊發音) -->
@@ -296,13 +346,13 @@
   </div>
 
   <!-- 腳本引入（附帶版本防快取） -->
-  <script src="js/data/kana.js?v=1.0.1"></script>
-  <script src="js/data/words.js?v=1.0.1"></script>
-  <script src="js/audio.js?v=1.0.1"></script>
-  <script src="js/game1-typing.js?v=1.0.1"></script>
+  <script src="js/data/kana.js?v=1.1.0"></script>
+  <script src="js/data/words.js?v=1.1.0"></script>
+  <script src="js/audio.js?v=1.1.0"></script>
+  <script src="js/game1-typing.js?v=1.1.0"></script>
 
   <script>
-    console.log('%c👾 Kana Invaders v1.0.1 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
+    console.log('%c👾 Kana Invaders v1.1.0 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
 
     // 遊戲主流程與 UI 互動事件綁定
     window.addEventListener('DOMContentLoaded', () => {
@@ -317,9 +367,15 @@
       document.getElementById('restartGameBtn').addEventListener('click', () => {
         game.start();
       });
+      document.getElementById('quickRestartBtn')?.addEventListener('click', () => {
+        game.start();
+      });
 
-      // 繼續遊戲
+      // 暫停與繼續遊戲
       document.getElementById('resumeGameBtn').addEventListener('click', () => {
+        game.togglePause();
+      });
+      document.getElementById('quickPauseBtn')?.addEventListener('click', () => {
         game.togglePause();
       });
 
@@ -334,10 +390,10 @@
       modeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           modeButtons.forEach(b => {
-            b.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-400');
+            b.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-400/40');
             b.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
           });
-          btn.classList.add('bg-cyan-600', 'text-white', 'border-cyan-400');
+          btn.classList.add('bg-cyan-600', 'text-white', 'border-cyan-400/40');
           btn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
           
           game.setMode(btn.dataset.mode);
