@@ -16,7 +16,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=1.0.1">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
@@ -30,7 +30,7 @@
         <div>
           <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
             Kana Invaders
-            <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono">v1.0</span>
+            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30">v1.0.1</span>
           </h1>
           <p class="text-xs text-slate-400">假名侵略者 · 敲擊鍵盤消滅降落假名與單字</p>
         </div>
@@ -295,13 +295,15 @@
     </div>
   </div>
 
-  <!-- 腳本引入 -->
-  <script src="js/data/kana.js"></script>
-  <script src="js/data/words.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/game1-typing.js"></script>
+  <!-- 腳本引入（附帶版本防快取） -->
+  <script src="js/data/kana.js?v=1.0.1"></script>
+  <script src="js/data/words.js?v=1.0.1"></script>
+  <script src="js/audio.js?v=1.0.1"></script>
+  <script src="js/game1-typing.js?v=1.0.1"></script>
 
   <script>
+    console.log('%c👾 Kana Invaders v1.0.1 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
+
     // 遊戲主流程與 UI 互動事件綁定
     window.addEventListener('DOMContentLoaded', () => {
       const game = new KanaTypingGame();
