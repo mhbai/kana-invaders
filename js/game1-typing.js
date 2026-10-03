@@ -232,12 +232,6 @@ class KanaTypingGame {
     // 聚焦手機輸入欄
     document.getElementById('mobileHiddenInput')?.focus();
 
-    document.getElementById('pauseOverlay')?.classList.add('hidden');
-    document.getElementById('stageClearModal')?.classList.add('hidden');
-
-    // 聚焦手機輸入欄
-    document.getElementById('mobileHiddenInput')?.focus();
-
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
     this.lastTime = performance.now();
     this.loop();
@@ -478,11 +472,17 @@ class KanaTypingGame {
       : 100;
 
     // 填充結算畫面
-    document.getElementById('finalScore').textContent = this.score;
-    document.getElementById('finalHighScore').textContent = this.highScore;
-    document.getElementById('finalDefeated').textContent = this.defeatedCount;
-    document.getElementById('finalCombo').textContent = this.maxCombo;
-    document.getElementById('finalAccuracy').textContent = `${accuracy}%`;
+    const finalScoreEl = document.getElementById('finalScore');
+    const finalHighScoreEl = document.getElementById('finalHighScore');
+    const finalDefeatedEl = document.getElementById('finalDefeated');
+    const finalComboEl = document.getElementById('finalCombo');
+    const finalAccEl = document.getElementById('finalAccuracy');
+
+    if (finalScoreEl) finalScoreEl.textContent = this.score;
+    if (finalHighScoreEl) finalHighScoreEl.textContent = this.highScore;
+    if (finalDefeatedEl) finalDefeatedEl.textContent = this.defeatedCount;
+    if (finalComboEl) finalComboEl.textContent = this.maxCombo;
+    if (finalAccEl) finalAccEl.textContent = `${accuracy}%`;
 
     // 渲染弱點複習清單
     const reviewContainer = document.getElementById('mistakeReviewList');
@@ -546,15 +546,23 @@ class KanaTypingGame {
 
     const modal = document.getElementById('stageClearModal');
     if (modal && stage) {
-      document.getElementById('clearStageTitle').textContent = stage.name;
-      document.getElementById('clearStageSubtitle').textContent = stage.subtitle;
-      document.getElementById('clearStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-      document.getElementById('clearScore').textContent = this.score;
-      document.getElementById('clearDefeated').textContent = `${this.stageDefeated} / ${this.stageTargetCount}`;
-      document.getElementById('clearCombo').textContent = `${this.maxCombo}x`;
+      const titleEl = document.getElementById('clearStageTitle');
+      const subtitleEl = document.getElementById('clearStageSubtitle');
+      const starsEl = document.getElementById('clearStars');
+      const scoreEl = document.getElementById('clearScore');
+      const defeatedEl = document.getElementById('clearDefeated');
+      const comboEl = document.getElementById('clearCombo');
+      const accEl = document.getElementById('clearAccuracy');
+
+      if (titleEl) titleEl.textContent = stage.name;
+      if (subtitleEl) subtitleEl.textContent = stage.subtitle;
+      if (starsEl) starsEl.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+      if (scoreEl) scoreEl.textContent = this.score;
+      if (defeatedEl) defeatedEl.textContent = `${this.stageDefeated} / ${this.stageTargetCount}`;
+      if (comboEl) comboEl.textContent = `${this.maxCombo}x`;
 
       const acc = this.totalTyped > 0 ? Math.round((this.correctTyped / this.totalTyped) * 100) : 100;
-      document.getElementById('clearAccuracy').textContent = `${acc}%`;
+      if (accEl) accEl.textContent = `${acc}%`;
 
       const nextBtn = document.getElementById('nextStageBtn');
       if (nextBtn) {
