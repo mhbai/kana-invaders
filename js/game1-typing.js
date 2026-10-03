@@ -776,23 +776,44 @@ class KanaTypingGame {
     const hintY = t.isWord ? drawY + 42 : drawY + 50;
 
     if (typed.length > 0) {
-      // 已經打了部分字母：已輸入顯示綠色，未輸入顯示灰色
       const typedPart = defaultRomaji.substring(0, typed.length);
-      const remainingPart = defaultRomaji.substring(typed.length);
-
       this.ctx.font = 'bold 12px monospace';
-      const fullWidth = this.ctx.measureText(defaultRomaji).width;
-      let curX = drawX + t.width / 2 - fullWidth / 2;
 
-      this.ctx.textAlign = 'left';
-      // 已輸入（高亮綠色）
-      this.ctx.fillStyle = '#4ade80';
-      this.ctx.fillText(typedPart, curX, hintY);
-      curX += this.ctx.measureText(typedPart).width;
+      // 只有在已跨越警戒線且開啟提示時，才顯示剩餘未打的明碼字母；
+      // 若仍在防護區外（上方），僅顯示已打字母，其餘字元保持遮罩（•），絕不洩漏未打拼音！
+      const showFullRemaining = isPastHintLine && this.showHints;
 
-      // 剩餘字母（淺灰色）
-      this.ctx.fillStyle = '#94a3b8';
-      this.ctx.fillText(remainingPart, curX, hintY);
+      if (showFullRemaining) {
+        const remainingPart = defaultRomaji.substring(typed.length);
+        const fullWidth = this.ctx.measureText(defaultRomaji).width;
+        let curX = drawX + t.width / 2 - fullWidth / 2;
+
+        this.ctx.textAlign = 'left';
+        // 已輸入字母（高亮綠色）
+        this.ctx.fillStyle = '#4ade80';
+        this.ctx.fillText(typedPart, curX, hintY);
+        curX += this.ctx.measureText(typedPart).width;
+
+        // 剩餘字母（明碼琥珀黃，緊急輔助）
+        this.ctx.fillStyle = '#fbbf24';
+        this.ctx.fillText(remainingPart, curX, hintY);
+      } else {
+        // 防護區外：已打字母顯示綠色，未打字母顯示遮罩圓點，強迫大腦繼續回想！
+        const remainingMask = '•'.repeat(defaultRomaji.length - typed.length);
+        const displayStr = typedPart + remainingMask;
+        const fullWidth = this.ctx.measureText(displayStr).width;
+        let curX = drawX + t.width / 2 - fullWidth / 2;
+
+        this.ctx.textAlign = 'left';
+        // 已輸入字母（高亮綠色，確認命中）
+        this.ctx.fillStyle = '#4ade80';
+        this.ctx.fillText(typedPart, curX, hintY);
+        curX += this.ctx.measureText(typedPart).width;
+
+        // 剩餘未打字母（暗色圓點遮罩，不透漏拼音內容）
+        this.ctx.fillStyle = '#64748b';
+        this.ctx.fillText(remainingMask, curX, hintY);
+      }
     } else if (isPastHintLine && this.showHints) {
       // 尚未輸入，但已過「拼音警戒防護層」：亮起緊急拼音提示！
       this.ctx.font = 'bold 11px monospace';
