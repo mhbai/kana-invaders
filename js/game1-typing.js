@@ -99,6 +99,7 @@ class KanaTypingGame {
       if (!this.stars || this.stars.length === 0) {
         this.initStars();
         this.initShootingStar();
+        this.initSaturn();
       } else if (oldW && oldH && (oldW !== this.width || oldH !== this.height)) {
         const ratioX = this.width / oldW;
         const ratioY = this.height / oldH;
@@ -109,6 +110,10 @@ class KanaTypingGame {
         if (this.pleiadesCluster) {
           this.pleiadesCluster.cx *= ratioX;
           this.pleiadesCluster.cy *= ratioY;
+        }
+        if (this.saturn) {
+          this.saturn.x *= ratioX;
+          this.saturn.y *= ratioY;
         }
       }
       this.render();
@@ -263,6 +268,42 @@ class KanaTypingGame {
         }
       }
     }
+
+    // 4. 更新巨型光環土星宏偉巡航 (Majestic Ringed Saturn)
+    if (this.saturn) {
+      const st = this.saturn;
+      if (st.active) {
+        st.y += (st.speed || 0.15) * warpFactor;
+        // 超出畫布底部時，進入冷卻計時，稍後在隨機橫向位置再次降臨
+        if (st.y > this.height + st.ringOuterR + 45) {
+          st.active = false;
+          // 冷卻 45 ~ 85 秒後於天頂重新降臨
+          st.nextTime = performance.now() + 45000 + Math.random() * 40000;
+        }
+      } else if (performance.now() >= (st.nextTime || 0)) {
+        st.active = true;
+        st.y = -st.ringOuterR - 35;
+        st.x = this.width * 0.18 + Math.random() * (this.width * 0.64);
+        st.tilt = -0.32 - Math.random() * 0.12;
+      }
+    }
+  }
+
+  // 初始化巨型光環土星系統 (Majestic Ringed Saturn Gas Giant)
+  initSaturn() {
+    const w = this.width || 800;
+    const h = this.height || 600;
+    this.saturn = {
+      active: true,
+      x: w * 0.74,
+      y: h * 0.20,
+      radius: 26,       // 行星本體半徑 (直徑 52px，大顆醒目)
+      ringOuterR: 70,   // 光環外徑長軸 (全寬 140px，壯麗華美)
+      ringInnerR: 36,   // 光環內徑長軸
+      tilt: -0.38,      // 自轉軸傾斜角度 (-22 度)
+      speed: 0.15,      // 宏大天體穩健巡航速度
+      nextTime: 0
+    };
   }
 
   // 初始化夜空流星系統
@@ -1480,7 +1521,12 @@ class KanaTypingGame {
     this.ctx.fillStyle = galaxyGrad2;
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // 2. 繪製壯麗繁星 (300+ 顆多層次視差星群)
+    // 2. 宏偉壯麗的巨型光環土星 (Majestic Ringed Saturn Gas Giant)
+    if (this.saturn && this.saturn.active) {
+      this.renderSaturn(this.saturn);
+    }
+
+    // 3. 繪製壯麗繁星 (300+ 顆多層次視差星群)
     for (let i = 0; i < this.stars.length; i++) {
       const star = this.stars[i];
       const sx = star.x;
@@ -1575,6 +1621,136 @@ class KanaTypingGame {
     }
 
     this.ctx.restore();
+  }
+
+  // 繪製浩瀚壯麗的巨型光環土星 (Majestic Ringed Saturn Gas Giant)
+  renderSaturn(st) {
+    if (!st || !st.active) return;
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(st.x, st.y);
+    ctx.rotate(st.tilt);
+
+    const r = st.radius;          // 行星半徑 (約 26px)
+    const outR = st.ringOuterR;    // 光環外長軸 (約 70px)
+    const inR = st.ringInnerR;     // 光環內長軸 (約 36px)
+    const ratio = 0.27;           // 橢圓扁率 (短軸/長軸)
+
+    // --- A. 光環後半段（位於行星球體後方，y < 0）---
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-outR - 15, -outR - 15, (outR + 15) * 2, outR + 15);
+    ctx.clip();
+    this.drawSaturnRings(ctx, outR, inR, ratio, r);
+    ctx.restore();
+
+    // --- B. 土星本體球體 (Gas Giant Sphere with Atmospheric Bands) ---
+    ctx.save();
+    // 行星大氣溫潤金色微光暈
+    ctx.shadowColor = 'rgba(253, 230, 138, 0.45)';
+    ctx.shadowBlur = 18;
+
+    // 球體 3D 漸層（光源自左上方）
+    const sphereGrad = ctx.createRadialGradient(
+      -r * 0.35, -r * 0.35, r * 0.08,
+      0, 0, r
+    );
+    sphereGrad.addColorStop(0.0, '#fef9c3'); // 陽照高光：米白金
+    sphereGrad.addColorStop(0.2, '#fde68a'); // 暖金氣體帶
+    sphereGrad.addColorStop(0.42, '#f59e0b'); // 琥珀條紋
+    sphereGrad.addColorStop(0.65, '#d97706'); // 焦糖條紋
+    sphereGrad.addColorStop(0.85, '#92400e'); // 深褐色暗帶
+    sphereGrad.addColorStop(0.96, '#451a03'); // 背光陰影
+    sphereGrad.addColorStop(1.0, '#1c1917'); // 深黑背光邊緣
+
+    ctx.fillStyle = sphereGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 行星表面水平氣體條紋（限制於球體內部）
+    ctx.clip();
+    const bands = [
+      { y: -r * 0.58, h: 3, color: 'rgba(254, 243, 199, 0.3)' },
+      { y: -r * 0.32, h: 4, color: 'rgba(180, 83, 9, 0.25)' },
+      { y: -r * 0.06, h: 5, color: 'rgba(217, 119, 6, 0.25)' },
+      { y: r * 0.22, h: 3.5, color: 'rgba(254, 240, 138, 0.25)' },
+      { y: r * 0.48, h: 4.5, color: 'rgba(120, 53, 15, 0.3)' }
+    ];
+    for (const b of bands) {
+      ctx.fillStyle = b.color;
+      ctx.fillRect(-r, b.y, r * 2, b.h);
+    }
+
+    // 光環在土星本體上投影的弧形暗影 (Shadow of Ring on Planet)
+    ctx.fillStyle = 'rgba(15, 10, 6, 0.52)';
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.14, r * 0.95, r * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // --- C. 光環前半段（穿過行星前方，y >= 0）---
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-outR - 15, 0, (outR + 15) * 2, outR + 15);
+    ctx.clip();
+    this.drawSaturnRings(ctx, outR, inR, ratio, r);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  // 繪製土星多層次精緻光環結構 (A環、卡西尼環縫、B環、C環)
+  drawSaturnRings(ctx, outR, inR, ratio, planetR) {
+    // 1. C環（最內圈薄環）
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, inR, inR * ratio, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, inR * 0.82, (inR * 0.82) * ratio, 0, 0, Math.PI * 2, true);
+    ctx.fillStyle = 'rgba(254, 243, 199, 0.2)';
+    ctx.fill('evenodd');
+    ctx.restore();
+
+    // 2. B環（最亮的主冰環）
+    const bOuterR = outR * 0.79;
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bOuterR, bOuterR * ratio, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, inR, inR * ratio, 0, 0, Math.PI * 2, true);
+    const bGrad = ctx.createRadialGradient(0, 0, inR, 0, 0, bOuterR);
+    bGrad.addColorStop(0.0, 'rgba(253, 224, 71, 0.45)');
+    bGrad.addColorStop(0.35, 'rgba(254, 240, 138, 0.75)');
+    bGrad.addColorStop(0.75, 'rgba(250, 204, 21, 0.65)');
+    bGrad.addColorStop(1.0, 'rgba(234, 179, 8, 0.35)');
+    ctx.fillStyle = bGrad;
+    ctx.fill('evenodd');
+    ctx.restore();
+
+    // 3. 卡西尼環縫 (Cassini Division): bOuterR (0.79) 到 aInnerR (0.83) 留空，深空背景透出！
+
+    // 4. A環（外側光環）
+    const aInnerR = outR * 0.83;
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, outR, outR * ratio, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, aInnerR, aInnerR * ratio, 0, 0, Math.PI * 2, true);
+    const aGrad = ctx.createRadialGradient(0, 0, aInnerR, 0, 0, outR);
+    aGrad.addColorStop(0.0, 'rgba(254, 240, 138, 0.45)');
+    aGrad.addColorStop(0.65, 'rgba(253, 230, 138, 0.60)');
+    aGrad.addColorStop(1.0, 'rgba(250, 204, 21, 0.15)');
+    ctx.fillStyle = aGrad;
+    ctx.fill('evenodd');
+    ctx.restore();
+
+    // 5. 光環最外側微細光刃
+    ctx.save();
+    ctx.strokeStyle = 'rgba(254, 249, 195, 0.45)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, outR, outR * ratio, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // 繪製「地球大氣層」(如同太空俯瞰地球大氣層邊緣：淡淡一層藍白漸層，靜態優雅，不喧賓奪主)
