@@ -78,16 +78,35 @@ class KanaTypingGame {
       this.width = rect.width;
       this.height = rect.height;
 
-      // 拼音提示警戒線（約 55% 畫面高度，過線後才顯示拼音）
+      // 地球大氣層邊界（約 54% 畫面高度，穿入白霧後才顯示拼音）
       this.hintLineY = this.height * 0.54;
       this.bottomLineY = this.height - 65;
 
       this.cannon.x = this.width / 2;
       this.cannon.y = this.height - 40;
+
+      this.initAtmosphereMist();
     };
 
     window.addEventListener('resize', resize);
     resize();
+  }
+
+  // 初始化地球大氣層飄移白霧粒子群
+  initAtmosphereMist() {
+    this.atmosphereMist = [];
+    const count = 26;
+    const w = this.width || 800;
+    for (let i = 0; i < count; i++) {
+      this.atmosphereMist.push({
+        x: Math.random() * w,
+        yRel: (Math.random() - 0.25) * 55,
+        radius: 38 + Math.random() * 55,
+        speed: 0.12 + Math.random() * 0.28,
+        alpha: 0.04 + Math.random() * 0.07,
+        pulseOffset: Math.random() * Math.PI * 2
+      });
+    }
   }
 
   bindEvents() {
@@ -417,15 +436,15 @@ class KanaTypingGame {
     const passedAlert = (target.y + target.height >= alertLineY) || target.crossedAlertLine;
 
     if (passedAlert) {
-      // ⚠️ 字通過警戒線才打掉：該字不算進 GOAL 計算中，而且之後會再補進一次
+      // ⚠️ 字進入大氣層才打掉：該字不算進 GOAL 計算中，而且之後會再補進一次
       if (target.rawItem) {
         this.stageQueue.push(target.rawItem);
       }
-      this.createFloatingText(target.x + target.width / 2, target.y + 10, '⚠️ 過線擊破 (不計GOAL·已回流)', '#fbbf24');
+      this.createFloatingText(target.x + target.width / 2, target.y + 10, '⚠️ 墜入大氣層擊破 (不計GOAL·已回流)', '#fbbf24');
     } else {
-      // 🎯 在警戒線前打掉：算進 GOAL 計算中，不補進
+      // 🎯 在大氣層前打掉：算進 GOAL 計算中，不補進
       this.stageDefeated++;
-      this.createFloatingText(target.x + target.width / 2, target.y + 10, '🎯 完美擊破 (+1 GOAL)', '#38bdf8');
+      this.createFloatingText(target.x + target.width / 2, target.y + 10, '🎯 大氣外完美截擊 (+1 GOAL)', '#38bdf8');
     }
 
     this.defeatedCount++;
@@ -740,21 +759,24 @@ class KanaTypingGame {
       progressBarEl.style.width = `${pct}%`;
     }
 
-    // 即時更新隨 Stage Goal 上升的即時速度倍率指示器 (1.0x ➔ 3.0x 極限狂飆)
+    // 即時更新隨 Stage Goal 上升的即時速度倍率指示器 (1.0x ➔ 5.0x 超極限)
     const speedBadgeEl = document.getElementById('hudSpeedBadge');
     if (speedBadgeEl) {
       const stageProgress = Math.min(1.0, this.stageDefeated / Math.max(1, this.stageTargetCount));
-      const factor = 1.0 + stageProgress * 2.0;
+      const factor = 1.0 + stageProgress * 4.0;
       const spd = factor.toFixed(1);
-      if (factor >= 2.5) {
-        speedBadgeEl.className = 'text-[9px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 font-mono border border-purple-400/60 shadow-sm shadow-purple-500/30 animate-pulse';
-        speedBadgeEl.textContent = `⚡ ${spd}x 🚀 MAX`;
-      } else if (factor >= 2.0) {
-        speedBadgeEl.className = 'text-[9px] px-1 py-0.5 rounded bg-rose-500/25 text-rose-300 font-mono border border-rose-500/40 animate-pulse';
+      if (factor >= 4.2) {
+        speedBadgeEl.className = 'text-[9px] px-1.5 py-0.5 rounded bg-fuchsia-600/35 text-fuchsia-100 font-mono border border-fuchsia-400/80 shadow-md shadow-fuchsia-500/60 animate-pulse font-bold tracking-wider';
+        speedBadgeEl.textContent = `⚡ ${spd}x 🚀 HYPER`;
+      } else if (factor >= 3.2) {
+        speedBadgeEl.className = 'text-[9px] px-1.5 py-0.5 rounded bg-purple-600/30 text-purple-200 font-mono border border-purple-400/70 shadow-sm shadow-purple-500/40 animate-pulse font-semibold';
+        speedBadgeEl.textContent = `⚡ ${spd}x 🔥🔥`;
+      } else if (factor >= 2.2) {
+        speedBadgeEl.className = 'text-[9px] px-1 py-0.5 rounded bg-rose-500/25 text-rose-300 font-mono border border-rose-500/50 animate-pulse font-medium';
         speedBadgeEl.textContent = `⚡ ${spd}x 🔥`;
       } else if (factor >= 1.5) {
-        speedBadgeEl.className = 'text-[9px] px-1 py-0.5 rounded bg-amber-500/25 text-amber-300 font-mono border border-amber-500/40';
-        speedBadgeEl.textContent = `⚡ ${spd}x`;
+        speedBadgeEl.className = 'text-[9px] px-1 py-0.5 rounded bg-amber-500/25 text-amber-300 font-mono border border-amber-500/40 font-medium';
+        speedBadgeEl.textContent = `⚡ ${spd}x ⚡`;
       } else {
         speedBadgeEl.className = 'text-[9px] px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40';
         speedBadgeEl.textContent = `⚡ ${spd}x`;
@@ -767,14 +789,14 @@ class KanaTypingGame {
     // 計算當前關卡擊破進度 (0.0 ~ 1.0，隨 Stage Goal 數值提升)
     const stageProgress = Math.min(1.0, this.stageDefeated / Math.max(1, this.stageTargetCount));
 
-    // 關卡內動態加速曲線：隨 Stage Goal 數值上升自 1.0x 顯著平滑加速至最高 3.0x（換新關立即恢復 1.0x 初始速度）
-    const stageSpeedFactor = 1.0 + stageProgress * 2.0;
+    // 關卡內動態加速曲線：隨 Stage Goal 數值上升自 1.0x 顯著平滑加速至最高 5.0x（換新關立即恢復 1.0x 初始速度）
+    const stageSpeedFactor = 1.0 + stageProgress * 4.0;
 
     // 敵人生成計時：只有在隊列中還有待發射題目時才生成，隨 Stage Goal 上升適度縮短間隔
     this.spawnTimer++;
-    const currentInterval = Math.max(55, Math.round(this.spawnInterval - stageProgress * 65));
+    const currentInterval = Math.max(38, Math.round(this.spawnInterval - stageProgress * 85));
     // 若畫面上完全沒有敵人且隊列中還有字，縮短等待時間迅速發射
-    const effectiveInterval = (this.targets.length === 0) ? Math.min(30, currentInterval) : currentInterval;
+    const effectiveInterval = (this.targets.length === 0) ? Math.min(20, currentInterval) : currentInterval;
     if (this.spawnTimer >= effectiveInterval) {
       if (this.stageQueue && this.stageQueue.length > 0) {
         this.spawnTarget();
@@ -796,7 +818,7 @@ class KanaTypingGame {
 
       if (t.hitShake > 0) t.hitShake--;
 
-      // 檢查是否跨過警戒線
+      // 檢查是否穿入地球大氣層警戒線
       if (t.y + t.height >= alertLineY) {
         t.crossedAlertLine = true;
       }
@@ -804,6 +826,17 @@ class KanaTypingGame {
       // 檢查是否突破底線
       if (t.y + t.height >= bottomLineY) {
         this.onTargetBreach(t);
+      }
+    }
+
+    // 更新地球大氣層漂移白霧粒子
+    if (this.atmosphereMist) {
+      for (const m of this.atmosphereMist) {
+        m.x += m.speed;
+        if (m.x - m.radius > this.width) {
+          m.x = -m.radius;
+          m.yRel = (Math.random() - 0.25) * 55;
+        }
       }
     }
 
@@ -864,23 +897,8 @@ class KanaTypingGame {
     // 繪製科技星光微粒背景
     this.renderStarfield();
 
-    // 1. 繪製「拼音警戒線」(Romaji Alert / Hint Line)
-    const hintLineY = this.hintLineY || (this.height * 0.54);
-    this.ctx.save();
-    this.ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-    this.ctx.lineWidth = 1.5;
-    this.ctx.setLineDash([6, 5]);
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, hintLineY);
-    this.ctx.lineTo(this.width, hintLineY);
-    this.ctx.stroke();
-    this.ctx.setLineDash([]);
-
-    this.ctx.fillStyle = 'rgba(245, 158, 11, 0.65)';
-    this.ctx.font = '10px monospace';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('⚠️ 警戒防護層 · 進入後顯現拼音提示 ⚠️', this.width / 2, hintLineY - 6);
-    this.ctx.restore();
+    // 1. 繪製「地球大氣層透明白霧區」(Earth Atmosphere Mist Layer)
+    this.renderEarthAtmosphere();
 
     // 2. 繪製「底線防禦網」(Defense Baseline)
     const bottomLineY = this.bottomLineY || (this.height - 65);
@@ -964,6 +982,127 @@ class KanaTypingGame {
     }
   }
 
+  // 繪製「進入地球大氣層的透明白霧感」視覺特效（徹底告別生硬虛線）
+  renderEarthAtmosphere() {
+    const hintLineY = this.hintLineY || (this.height * 0.54);
+    const time = performance.now() * 0.001;
+    this.ctx.save();
+
+    // A. 大氣層底層半透明白霧/深空漸層 (Atmospheric Volume Gradient)
+    // 從大氣層外緣 (hintLineY - 24) 向下延伸至畫面底部，營造大氣層內朦朧白霧與微藍厚重感
+    const atmosGrad = this.ctx.createLinearGradient(0, hintLineY - 24, 0, this.height);
+    atmosGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    atmosGrad.addColorStop(0.06, 'rgba(224, 242, 254, 0.05)');
+    atmosGrad.addColorStop(0.14, 'rgba(255, 255, 255, 0.18)'); // 大氣頂部明亮白霧
+    atmosGrad.addColorStop(0.30, 'rgba(224, 242, 254, 0.11)'); // 對流層白霧
+    atmosGrad.addColorStop(0.60, 'rgba(186, 230, 253, 0.05)');
+    atmosGrad.addColorStop(1.0, 'rgba(56, 189, 248, 0.02)');
+    this.ctx.fillStyle = atmosGrad;
+    this.ctx.fillRect(0, hintLineY - 24, this.width, this.height - (hintLineY - 24));
+
+    // B. 有機流動白霧波浪（飄渺的大氣雲海邊界）
+    // Wave 1: 飄動的上層柔和白霧
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, hintLineY);
+    for (let x = 0; x <= this.width; x += 12) {
+      const wy = hintLineY + Math.sin(x * 0.014 + time * 0.9) * 4.5 + Math.cos(x * 0.028 - time * 0.6) * 2.5;
+      this.ctx.lineTo(x, wy);
+    }
+    this.ctx.lineTo(this.width, hintLineY + 50);
+    this.ctx.lineTo(0, hintLineY + 50);
+    this.ctx.closePath();
+    const waveGrad1 = this.ctx.createLinearGradient(0, hintLineY - 5, 0, hintLineY + 50);
+    waveGrad1.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+    waveGrad1.addColorStop(0.5, 'rgba(240, 249, 255, 0.08)');
+    waveGrad1.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    this.ctx.fillStyle = waveGrad1;
+    this.ctx.fill();
+
+    // Wave 2: 第二層交錯緩動深層白霧
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, hintLineY + 4);
+    for (let x = 0; x <= this.width; x += 14) {
+      const wy = hintLineY + 4 + Math.cos(x * 0.010 - time * 0.7) * 5.0 + Math.sin(x * 0.022 + time * 1.1) * 3.0;
+      this.ctx.lineTo(x, wy);
+    }
+    this.ctx.lineTo(this.width, hintLineY + 80);
+    this.ctx.lineTo(0, hintLineY + 80);
+    this.ctx.closePath();
+    const waveGrad2 = this.ctx.createLinearGradient(0, hintLineY, 0, hintLineY + 80);
+    waveGrad2.addColorStop(0, 'rgba(224, 242, 254, 0.12)');
+    waveGrad2.addColorStop(0.6, 'rgba(186, 230, 253, 0.05)');
+    waveGrad2.addColorStop(1, 'rgba(224, 242, 254, 0)');
+    this.ctx.fillStyle = waveGrad2;
+    this.ctx.fill();
+
+    // C. 漂移的柔焦白霧朵（Atmospheric Mist Clouds）
+    if (this.atmosphereMist && this.atmosphereMist.length > 0) {
+      for (const m of this.atmosphereMist) {
+        const pulse = 1.0 + Math.sin(time * 1.5 + m.pulseOffset) * 0.15;
+        const currentRadius = m.radius * pulse;
+        const puffGrad = this.ctx.createRadialGradient(m.x, hintLineY + m.yRel, 0, m.x, hintLineY + m.yRel, currentRadius);
+        puffGrad.addColorStop(0, `rgba(255, 255, 255, ${m.alpha * 1.4})`);
+        puffGrad.addColorStop(0.5, `rgba(224, 242, 254, ${m.alpha * 0.7})`);
+        puffGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        this.ctx.fillStyle = puffGrad;
+        this.ctx.beginPath();
+        this.ctx.arc(m.x, hintLineY + m.yRel, currentRadius, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+    }
+
+    // D. 地球大氣天際光暈邊界 (Celestial Atmospheric Limb) — 柔和光輝取代生硬虛線
+    // 柔和外光暈 (Outer Atmospheric Halo)
+    this.ctx.shadowColor = 'rgba(224, 242, 254, 0.9)';
+    this.ctx.shadowBlur = 15;
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    this.ctx.lineWidth = 2.5;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, hintLineY);
+    this.ctx.lineTo(this.width, hintLineY);
+    this.ctx.stroke();
+
+    // 核心微白明線 (Inner Crisp Core)
+    this.ctx.shadowBlur = 5;
+    this.ctx.shadowColor = 'rgba(255, 255, 255, 1.0)';
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, hintLineY);
+    this.ctx.lineTo(this.width, hintLineY);
+    this.ctx.stroke();
+
+    // E. 精緻大氣邊界膠囊標籤 (Atmosphere Entry HUD Capsule)
+    const labelText = '☁️ 地球大氣層邊界 · 進入白霧顯現拼音 ☁️';
+    this.ctx.font = 'bold 10px monospace';
+    const textW = this.ctx.measureText(labelText).width;
+    const badgeW = textW + 28;
+    const badgeH = 20;
+    const badgeX = this.width / 2 - badgeW / 2;
+    const badgeY = hintLineY - badgeH / 2;
+
+    // 膠囊底框（深空微光透鏡）
+    this.ctx.shadowBlur = 8;
+    this.ctx.shadowColor = 'rgba(186, 230, 253, 0.5)';
+    this.ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    this.ctx.strokeStyle = 'rgba(224, 242, 254, 0.65)';
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    this.ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 10);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // 膠囊文字
+    this.ctx.shadowBlur = 4;
+    this.ctx.shadowColor = '#e0f2fe';
+    this.ctx.fillStyle = '#f0f9ff';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(labelText, this.width / 2, hintLineY);
+
+    this.ctx.restore();
+  }
+
   renderCannon() {
     const { x, y, currentAngle } = this.cannon;
 
@@ -1004,6 +1143,7 @@ class KanaTypingGame {
 
     const drawX = t.x + shakeX;
     const drawY = t.y;
+    const isPastHintLine = (t.y + t.height >= (this.hintLineY || this.height * 0.54));
 
     this.ctx.save();
 
@@ -1019,6 +1159,13 @@ class KanaTypingGame {
       this.ctx.lineWidth = 2.5;
       this.ctx.shadowColor = '#f59e0b';
       this.ctx.shadowBlur = 15;
+    } else if (isPastHintLine) {
+      // 穿入地球大氣層白霧區：邊緣泛起柔和白霧天際光暈
+      this.ctx.fillStyle = 'rgba(19, 30, 54, 0.90)';
+      this.ctx.strokeStyle = '#bae6fd';
+      this.ctx.lineWidth = 2;
+      this.ctx.shadowColor = 'rgba(224, 242, 254, 0.85)';
+      this.ctx.shadowBlur = 12;
     } else {
       this.ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
       this.ctx.strokeStyle = `hsl(${t.hue}, 80%, 55%)`;
@@ -1028,6 +1175,21 @@ class KanaTypingGame {
     }
     this.ctx.fill();
     this.ctx.stroke();
+
+    // 若穿入地球大氣層，在卡片頂部渲染大氣摩擦白霧微粒
+    if (isPastHintLine) {
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      const mistTime = performance.now() * 0.006;
+      for (let s = 0; s < 3; s++) {
+        const vx = drawX + (t.width * (0.2 + s * 0.3)) + Math.sin(mistTime + s * 2) * 4;
+        const vy = drawY - 3 - Math.abs(Math.cos(mistTime * 0.8 + s * 1.5)) * 6;
+        this.ctx.beginPath();
+        this.ctx.arc(vx, vy, 2.2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    }
 
     // 2. 假名文字渲染
     this.ctx.textAlign = 'center';
@@ -1042,14 +1204,13 @@ class KanaTypingGame {
     // 3. 拼音比對進度與提示
     const defaultRomaji = t.matchedRomaji || t.romajiList[0];
     const typed = t.currentTyped;
-    const isPastHintLine = (t.y + t.height >= (this.hintLineY || this.height * 0.54));
     const hintY = t.isWord ? drawY + 42 : drawY + 50;
 
     if (typed.length > 0) {
       const typedPart = defaultRomaji.substring(0, typed.length);
       this.ctx.font = 'bold 12px monospace';
 
-      // 只有在已跨越警戒線且開啟提示時，才顯示剩餘未打的明碼字母；
+      // 只有在已穿入地球大氣層且開啟提示時，才顯示剩餘未打的明碼字母；
       // 若仍在防護區外（上方），僅顯示已打字母，其餘字元保持遮罩（•），絕不洩漏未打拼音！
       const showFullRemaining = isPastHintLine && this.showHints;
 
@@ -1068,7 +1229,7 @@ class KanaTypingGame {
         this.ctx.fillStyle = '#fbbf24';
         this.ctx.fillText(remainingPart, curX, hintY);
       } else {
-        // 防護區外：已打字母顯示綠色，未打字母顯示遮罩圓點，強迫大腦繼續回想！
+        // 大氣層外：已打字母顯示綠色，未打字母顯示遮罩圓點，強迫大腦繼續回想！
         const remainingMask = '•'.repeat(defaultRomaji.length - typed.length);
         const displayStr = typedPart + remainingMask;
         const fullWidth = this.ctx.measureText(displayStr).width;
@@ -1085,20 +1246,20 @@ class KanaTypingGame {
         this.ctx.fillText(remainingMask, curX, hintY);
       }
     } else if (isPastHintLine && this.showHints) {
-      // 尚未輸入，但已過「拼音警戒防護層」：亮起緊急拼音提示！
+      // 尚未輸入，但已過「地球大氣層邊界」：亮起大氣穿透拼音提示！
       this.ctx.font = 'bold 11px monospace';
-      this.ctx.fillStyle = '#fbbf24'; // 醒目琥珀黃提示
+      this.ctx.fillStyle = '#fde047'; // 醒目大氣金黃光提示
       const hintText = t.isWord 
-        ? `⚡ ${defaultRomaji} · ${t.subText.split(' [')[0]}`
-        : `⚡ ${defaultRomaji}`;
+        ? `☁️ ${defaultRomaji} · ${t.subText.split(' [')[0]}`
+        : `☁️ ${defaultRomaji}`;
       this.ctx.fillText(hintText, drawX + t.width / 2, hintY);
     } else if (t.isWord) {
-      // 尚未過警戒線且為單字：只顯示中文意思提供語意聯想，隱藏羅馬拼音！
+      // 尚未穿入大氣層且為單字：只顯示中文意思提供語意聯想，隱藏羅馬拼音！
       this.ctx.font = '11px sans-serif';
       this.ctx.fillStyle = '#64748b'; // 低調灰
       this.ctx.fillText(t.subText.split(' [')[0], drawX + t.width / 2, hintY);
     } else {
-      // 五十音在過線前完全不顯示拼音！強迫大腦主動聯想發音！
+      // 五十音在大氣層前完全不顯示拼音！強迫大腦主動聯想發音！
       this.ctx.font = '10px monospace';
       this.ctx.fillStyle = '#334155';
       this.ctx.fillText('• • •', drawX + t.width / 2, hintY);
