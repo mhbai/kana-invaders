@@ -58,10 +58,15 @@ class KanaTypingGame {
     this.stageTargetCount = 50;
     this.stageQueue = []; // 待發射題目隊列（每關剛好放出 50 個字，漏接/過線自動回流）
     this.floatingTexts = []; // 浮動文字提示特效隊列
+    this.galaxyOffsetY = 0; // 銀河星雲向下漂移累計位移
 
     this.initCanvas();
     this.bindEvents();
     setTimeout(() => this.renderStageMap(), 50);
+
+    // 啟動宇宙基地常態視差星空巡航循環（Ambient Space Station Cruise）
+    this.lastTime = performance.now();
+    this.loop();
   }
 
   initCanvas() {
@@ -70,6 +75,9 @@ class KanaTypingGame {
       const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       
+      const oldW = this.width;
+      const oldH = this.height;
+
       this.canvas.width = rect.width * dpr;
       this.canvas.height = rect.height * dpr;
       this.ctx.resetTransform?.();
@@ -88,42 +96,64 @@ class KanaTypingGame {
       if (!this.stars || this.stars.length === 0) {
         this.initStars();
         this.initShootingStar();
+      } else if (oldW && oldH && (oldW !== this.width || oldH !== this.height)) {
+        const ratioX = this.width / oldW;
+        const ratioY = this.height / oldH;
+        this.stars.forEach(s => {
+          s.x = (s.x || 0) * ratioX;
+          s.y = (s.y || 0) * ratioY;
+        });
+        if (this.pleiadesCluster) {
+          this.pleiadesCluster.cx *= ratioX;
+          this.pleiadesCluster.cy *= ratioY;
+        }
       }
+      this.render();
     };
 
     window.addEventListener('resize', resize);
     resize();
   }
 
-  // 初始化壯麗繁星系統（300+ 顆多層次星群、色彩分佈、昴宿星團與天狼星超巨星）
+  // 初始化壯麗繁星系統（300+ 顆多層次星群、色彩分佈、視差速度、昴宿星團與天狼星超巨星）
   initStars() {
     this.stars = [];
     const count = 320;
+    const w = this.width || 800;
+    const h = this.height || 600;
 
     // 1. 特殊大巨星（如金星／天狼星，具備柔和光暈與四芒星衍射光線）
-    this.stars.push({
-      nx: 0.86,
-      ny: 0.38,
+    this.superStar = {
+      x: w * 0.86,
+      y: h * 0.38,
       size: 2.8,
+      speed: 0.32,
       baseAlpha: 1.0,
       color: '#ffffff',
       glowColor: '#38bdf8',
       twinkleSpeed: 1.2,
       twinklePhase: 0,
       isSuperStar: true
-    });
+    };
+    this.stars.push(this.superStar);
 
-    // 2. 昴宿星團 (Pleiades / Subaru Cluster，7 顆精緻相偎的微星群)
-    const clusterCx = 0.42;
-    const clusterCy = 0.16;
+    // 2. 昴宿星團 (Pleiades / Subaru Cluster，7 顆精緻相偎的微星群，集體以固定隊形向下巡航)
+    this.pleiadesCluster = {
+      cx: w * 0.42,
+      cy: h * 0.16,
+      speed: 0.36
+    };
     const clusterOffsets = [
-      [-0.012, -0.008], [-0.006, -0.012], [0.002, -0.006],
-      [0.008, -0.002], [-0.004, 0.005], [0.006, 0.006], [0.012, 0.002]
+      [-14, -10], [-7, -15], [3, -7],
+      [11, -3], [-5, 7], [7, 8], [15, 3]
     ];
+    this.clusterStars = [];
     for (const [dx, dy] of clusterOffsets) {
-      this.stars.push({
-        nx: clusterCx + dx,
-        ny: clusterCy + dy,
+      const cs = {
+        offsetX: dx,
+        offsetY: dy,
+        x: this.pleiadesCluster.cx + dx,
+        y: this.pleiadesCluster.cy + dy,
         size: 1.2 + Math.random() * 0.7,
         baseAlpha: 0.75 + Math.random() * 0.25,
         color: '#bae6fd',
@@ -131,10 +161,12 @@ class KanaTypingGame {
         twinkleSpeed: 2.0 + Math.random() * 1.5,
         twinklePhase: Math.random() * Math.PI * 2,
         isClusterStar: true
-      });
+      };
+      this.clusterStars.push(cs);
+      this.stars.push(cs);
     }
 
-    // 3. 散佈於全天候的壯麗繁星群（層次星塵、主星、耀眼亮星與天然光譜色系）
+    // 3. 散佈於全天候的壯麗繁星群（多層次星塵、主星、耀眼亮星與天然光譜色系）
     const colorPalette = [
       '#ffffff', '#ffffff', '#ffffff', '#ffffff', // 經典鑽石白 (50%)
       '#e0f2fe', '#bae6fd', '#7dd3fc',          // 仙女座／織女星天藍色系 (35%)
@@ -143,39 +175,90 @@ class KanaTypingGame {
     ];
 
     for (let i = 0; i < count; i++) {
-      const nx = Math.random();
-      // 稍微偏向上空（ny: 0.01 ~ 0.88），避開地平線底部
-      const ny = Math.pow(Math.random(), 0.88) * 0.86;
+      const x = Math.random() * w;
+      const y = Math.random() * h;
       const r = Math.random();
-      let size, baseAlpha, isBright = false;
+      let size, baseAlpha, speed, isBright = false;
 
       if (r < 0.65) {
-        // 微光星塵 (Micro-stars，數量龐大營造浩瀚深邃感)
+        // 微光星塵 (Micro-stars，數量龐大營造深空深邃感，在極遠背景，速度最慢)
         size = 0.6 + Math.random() * 0.5;
         baseAlpha = 0.25 + Math.random() * 0.35;
-      } else if (r < 0.94) {
-        // 中等璀璨主星 (Medium stars)
+        speed = 0.22 + Math.random() * 0.22;
+      } else if (r < 0.93) {
+        // 中等璀璨主星 (Medium stars，中景天體)
         size = 1.0 + Math.random() * 0.6;
         baseAlpha = 0.58 + Math.random() * 0.32;
+        speed = 0.50 + Math.random() * 0.35;
       } else {
-        // 耀眼亮星 (Major bright stars，帶有星輝微光暈)
+        // 耀眼亮星 (Major bright stars，帶有星輝微光暈，前景近星，視差感強烈)
         size = 1.8 + Math.random() * 0.8;
         baseAlpha = 0.85 + Math.random() * 0.15;
+        speed = 0.90 + Math.random() * 0.45;
         isBright = true;
       }
 
       const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
 
       this.stars.push({
-        nx,
-        ny,
+        x,
+        y,
         size,
         baseAlpha,
+        speed,
         color,
         twinkleSpeed: 0.8 + Math.random() * 2.8,
         twinklePhase: Math.random() * Math.PI * 2,
         isBright
       });
+    }
+  }
+
+  // 更新壯麗星空與星雲向下捲動（宇宙基地多層次視差推進效果）
+  updateStars(stageProgress = 0) {
+    if (!this.stars || this.stars.length === 0) return;
+
+    // 太空基地推進加速係數（隨關卡進度由 1.0x 平滑加速至 2.25x 超空間躍遷感）
+    const warpFactor = 1.0 + stageProgress * 1.25;
+
+    // 1. 更新銀河星雲微光帶緩慢下移
+    this.galaxyOffsetY = ((this.galaxyOffsetY || 0) + 0.12 * warpFactor) % (this.height * 2);
+
+    // 2. 更新昴宿星團整體坐標（保持星團陣型完美固定）
+    if (this.pleiadesCluster) {
+      this.pleiadesCluster.cy += this.pleiadesCluster.speed * warpFactor;
+      if (this.pleiadesCluster.cy > this.height + 40) {
+        this.pleiadesCluster.cy = -40;
+        this.pleiadesCluster.cx = this.width * 0.15 + Math.random() * (this.width * 0.7);
+      }
+      if (this.clusterStars) {
+        for (let i = 0; i < this.clusterStars.length; i++) {
+          const cs = this.clusterStars[i];
+          cs.x = this.pleiadesCluster.cx + cs.offsetX;
+          cs.y = this.pleiadesCluster.cy + cs.offsetY;
+        }
+      }
+    }
+
+    // 3. 更新全天星體向下捲動（視差分層）
+    for (let i = 0; i < this.stars.length; i++) {
+      const star = this.stars[i];
+      if (star.isClusterStar) continue; // 昴宿星團已隨母坐標同步位移
+
+      star.y += (star.speed || 0.4) * warpFactor;
+
+      if (star.isSuperStar) {
+        if (star.y > this.height + 30) {
+          star.y = -25;
+          star.x = this.width * 0.15 + Math.random() * (this.width * 0.7);
+        }
+      } else {
+        // 超出畫布底部時，循環重置回天頂上方，保持全天星辰無縫流轉
+        if (star.y > this.height + 12) {
+          star.y = -8 - Math.random() * 10;
+          star.x = Math.random() * this.width;
+        }
+      }
     }
   }
 
@@ -190,8 +273,36 @@ class KanaTypingGame {
       vy: 0,
       life: 0,
       maxLife: 0,
-      nextTime: performance.now() + 6000 + Math.random() * 8000
+      nextTime: performance.now() + 5000 + Math.random() * 7000
     };
+  }
+
+  // 更新夜空偶現流星
+  updateShootingStar() {
+    if (!this.shootingStar) return;
+    const now = performance.now();
+    if (!this.shootingStar.active && now >= this.shootingStar.nextTime) {
+      this.shootingStar.active = true;
+      this.shootingStar.x = Math.random() * (this.width * 0.75);
+      this.shootingStar.y = 15 + Math.random() * (this.height * 0.35);
+      const speed = 9 + Math.random() * 5;
+      const angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.35;
+      this.shootingStar.vx = Math.cos(angle) * speed;
+      this.shootingStar.vy = Math.sin(angle) * speed;
+      this.shootingStar.life = 1.0;
+      this.shootingStar.maxLife = 26 + Math.random() * 12;
+      this.shootingStar.length = 40 + Math.random() * 40;
+      this.shootingStar.nextTime = now + 12000 + Math.random() * 14000;
+    }
+
+    if (this.shootingStar.active) {
+      this.shootingStar.x += this.shootingStar.vx;
+      this.shootingStar.y += this.shootingStar.vy;
+      this.shootingStar.life -= 1.0 / this.shootingStar.maxLife;
+      if (this.shootingStar.life <= 0) {
+        this.shootingStar.active = false;
+      }
+    }
   }
 
   bindEvents() {
@@ -371,7 +482,6 @@ class KanaTypingGame {
     } else {
       pauseOverlay?.classList.add('hidden');
       this.lastTime = performance.now();
-      this.loop();
     }
   }
 
@@ -675,7 +785,7 @@ class KanaTypingGame {
   // 關卡突破結算 (Stage Clear)
   onStageClear() {
     this.isPlaying = false;
-    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+    // 保持 loop 循環以維持宇宙基地星空流動背景
 
     window.audioManager.playLevelUp();
 
@@ -874,6 +984,9 @@ class KanaTypingGame {
     // 計算當前關卡擊破進度 (0.0 ~ 1.0，隨 Stage Goal 數值提升)
     const stageProgress = Math.min(1.0, this.stageDefeated / Math.max(1, this.stageTargetCount));
 
+    // 宇宙基地多層次視差星空向下捲動（速度與關卡進度 Warp 加速連動）
+    this.updateStars(stageProgress);
+
     // 關卡內動態加速曲線：隨 Stage Goal 數值上升自 1.0x 顯著平滑加速至最高 5.0x（換新關立即恢復 1.0x 初始速度）
     const stageSpeedFactor = 1.0 + stageProgress * 4.0;
 
@@ -945,31 +1058,7 @@ class KanaTypingGame {
     }
 
     // 更新夜空偶現流星
-    if (this.shootingStar) {
-      const now = performance.now();
-      if (!this.shootingStar.active && now >= this.shootingStar.nextTime) {
-        this.shootingStar.active = true;
-        this.shootingStar.x = Math.random() * (this.width * 0.75);
-        this.shootingStar.y = 15 + Math.random() * (this.height * 0.35);
-        const speed = 9 + Math.random() * 5;
-        const angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.35;
-        this.shootingStar.vx = Math.cos(angle) * speed;
-        this.shootingStar.vy = Math.sin(angle) * speed;
-        this.shootingStar.life = 1.0;
-        this.shootingStar.maxLife = 26 + Math.random() * 12;
-        this.shootingStar.length = 40 + Math.random() * 40;
-        this.shootingStar.nextTime = now + 12000 + Math.random() * 14000;
-      }
-
-      if (this.shootingStar.active) {
-        this.shootingStar.x += this.shootingStar.vx;
-        this.shootingStar.y += this.shootingStar.vy;
-        this.shootingStar.life -= 1.0 / this.shootingStar.maxLife;
-        if (this.shootingStar.life <= 0) {
-          this.shootingStar.active = false;
-        }
-      }
-    }
+    this.updateShootingStar();
 
     // 畫面震動衰退
     if (this.screenShake > 0) this.screenShake *= 0.85;
@@ -1070,21 +1159,27 @@ class KanaTypingGame {
     const time = performance.now() * 0.001;
     this.ctx.save();
 
-    // 1. 銀河星雲微光帶 (Milky Way Galactic Dust Bands)
-    // 第一道主銀河斜射星雲帶
-    const galaxyGrad1 = this.ctx.createLinearGradient(0, 0, this.width * 0.85, this.height * 0.7);
-    galaxyGrad1.addColorStop(0.0, 'rgba(56, 189, 248, 0)');
-    galaxyGrad1.addColorStop(0.35, 'rgba(99, 102, 241, 0.045)');
-    galaxyGrad1.addColorStop(0.55, 'rgba(56, 189, 248, 0.06)');
-    galaxyGrad1.addColorStop(0.70, 'rgba(147, 197, 253, 0.035)');
-    galaxyGrad1.addColorStop(1.0, 'rgba(30, 58, 138, 0)');
-    this.ctx.fillStyle = galaxyGrad1;
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    // 1. 銀河星雲微光帶 (Milky Way Galactic Dust Bands，隨太空基地航行緩緩向下漂移)
+    const gY = (this.galaxyOffsetY || 0) % this.height;
+    // 雙層無縫連續漸層，呈現深空銀河天帶
+    for (const offset of [-this.height, 0]) {
+      const cy = gY + offset;
+      const galaxyGrad1 = this.ctx.createLinearGradient(0, cy, this.width * 0.85, cy + this.height);
+      galaxyGrad1.addColorStop(0.0, 'rgba(56, 189, 248, 0)');
+      galaxyGrad1.addColorStop(0.35, 'rgba(99, 102, 241, 0.045)');
+      galaxyGrad1.addColorStop(0.55, 'rgba(56, 189, 248, 0.06)');
+      galaxyGrad1.addColorStop(0.70, 'rgba(147, 197, 253, 0.035)');
+      galaxyGrad1.addColorStop(1.0, 'rgba(30, 58, 138, 0)');
+      this.ctx.fillStyle = galaxyGrad1;
+      this.ctx.fillRect(0, 0, this.width, this.height);
+    }
 
-    // 第二道星團核心柔和光芒（右上部星團星雲）
+    // 第二道星團核心柔和光芒（右上部星雲隨星系緩動）
+    const cycleH = this.height + 400;
+    const nebulaCoreY = (((this.height * 0.32 + (this.galaxyOffsetY || 0) * 0.6) % cycleH) + cycleH) % cycleH - 200;
     const galaxyGrad2 = this.ctx.createRadialGradient(
-      this.width * 0.78, this.height * 0.32, 10,
-      this.width * 0.78, this.height * 0.32, 220
+      this.width * 0.78, nebulaCoreY, 10,
+      this.width * 0.78, nebulaCoreY, 220
     );
     galaxyGrad2.addColorStop(0, 'rgba(224, 242, 254, 0.06)');
     galaxyGrad2.addColorStop(0.4, 'rgba(99, 102, 241, 0.035)');
@@ -1092,11 +1187,11 @@ class KanaTypingGame {
     this.ctx.fillStyle = galaxyGrad2;
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // 2. 繪製壯麗繁星 (300+ 顆多層次星群)
+    // 2. 繪製壯麗繁星 (300+ 顆多層次視差星群)
     for (let i = 0; i < this.stars.length; i++) {
       const star = this.stars[i];
-      const sx = star.nx * this.width;
-      const sy = star.ny * this.height;
+      const sx = star.x;
+      const sy = star.y;
 
       // 閃爍呼吸光感 (Gentle Scintillation)
       const twinkle = 0.72 + Math.sin(time * star.twinkleSpeed + star.twinklePhase) * 0.28;
@@ -1578,12 +1673,16 @@ class KanaTypingGame {
   }
 
   loop(timestamp = 0) {
-    if (!this.isPlaying || this.isPaused) return;
-
     const deltaTime = timestamp - (this.lastTime || timestamp);
     this.lastTime = timestamp;
 
-    this.update(deltaTime);
+    if (this.isPlaying && !this.isPaused) {
+      this.update(deltaTime);
+    } else {
+      // 待機、暫停或結算狀態下，維持宇宙基地背景多層次視差星空緩慢航行（Ambient Drift）
+      this.updateStars(0);
+      this.updateShootingStar();
+    }
     this.render();
 
     this.animationFrameId = requestAnimationFrame(t => this.loop(t));
