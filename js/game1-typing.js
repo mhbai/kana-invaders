@@ -870,23 +870,8 @@ class KanaTypingGame {
     // 1. 繪製「地球大氣層透明白霧區」(Earth Atmosphere Mist Layer)
     this.renderEarthAtmosphere();
 
-    // 2. 繪製「底線防禦網」(Defense Baseline)
-    const bottomLineY = this.bottomLineY || (this.height - 65);
-    this.ctx.save();
-    this.ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
-    this.ctx.lineWidth = 2;
-    this.ctx.setLineDash([8, 6]);
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, bottomLineY);
-    this.ctx.lineTo(this.width, bottomLineY);
-    this.ctx.stroke();
-    this.ctx.setLineDash([]);
-
-    this.ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
-    this.ctx.font = '10px monospace';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('⚡ DEFENSE PERIMETER ⚡', this.width / 2, bottomLineY + 14);
-    this.ctx.restore();
+    // 2. 繪製「地平線遠景城市天際線」(Distant City Skyline Horizon & Defense Baseline)
+    this.renderCitySkyline();
 
     // 繪製掉落目標
     this.targets.forEach(t => this.renderTarget(t));
@@ -988,6 +973,185 @@ class KanaTypingGame {
     this.ctx.textAlign = 'right';
     this.ctx.textBaseline = 'bottom';
     this.ctx.fillText('☁️ 大氣層 (提示顯現)', this.width - 12, hintLineY - 3);
+
+    this.ctx.restore();
+  }
+
+  // 繪製「地平線遠景高樓天際線」(取代呆板虛線，彷彿遠眺橫濱港夜景，高樓微凸於地面)
+  renderCitySkyline() {
+    const bottomLineY = this.bottomLineY || (this.height - 65);
+    this.ctx.save();
+
+    // 1. 城市夜空微光 (Nocturnal Urban Haze / Horizon Glow)
+    const glowH = 35;
+    const glowGrad = this.ctx.createLinearGradient(0, bottomLineY - glowH, 0, bottomLineY);
+    glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+    glowGrad.addColorStop(0.5, 'rgba(30, 58, 138, 0.08)');
+    glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0.12)');
+    this.ctx.fillStyle = glowGrad;
+    this.ctx.fillRect(0, bottomLineY - glowH, this.width, glowH);
+
+    // 2. 模組化遠景城市高樓 (Procedural Distant City Blocks, 寬度約 260px 循環鋪滿地平線)
+    const moduleW = 260;
+    const repeatCount = Math.ceil(this.width / moduleW) + 1;
+
+    for (let m = 0; m < repeatCount; m++) {
+      const ox = m * moduleW;
+
+      // --- 後排遠景建築剪影（較暗深藍，營造縱深）---
+      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      this.ctx.fillRect(ox + 8, bottomLineY - 24, 18, 24);
+      this.ctx.fillRect(ox + 42, bottomLineY - 18, 22, 18);
+      this.ctx.fillRect(ox + 95, bottomLineY - 28, 16, 28);
+      this.ctx.fillRect(ox + 140, bottomLineY - 20, 26, 20);
+      this.ctx.fillRect(ox + 195, bottomLineY - 22, 15, 22);
+
+      // 後排微弱白光窗戶
+      this.ctx.fillStyle = 'rgba(148, 163, 184, 0.25)';
+      for (let r = 0; r < 4; r++) {
+        this.ctx.fillRect(ox + 11, bottomLineY - 21 + r * 5, 2, 2);
+        this.ctx.fillRect(ox + 16, bottomLineY - 21 + r * 5, 2, 2);
+        this.ctx.fillRect(ox + 144, bottomLineY - 17 + r * 4, 3, 1.5);
+        this.ctx.fillRect(ox + 152, bottomLineY - 17 + r * 4, 3, 1.5);
+      }
+
+      // --- 前排精緻城市建築群（微微凸起的高樓與地標輪廓）---
+      // 建築 1: 橫濱地標塔風 (Yokohama Landmark Tower) - 梯形逐層收窄 + 頂部天線
+      this.ctx.fillStyle = '#0f172a';
+      this.ctx.fillRect(ox + 20, bottomLineY - 24, 15, 24);
+      this.ctx.fillRect(ox + 22, bottomLineY - 30, 11, 6);
+      this.ctx.fillRect(ox + 24, bottomLineY - 34, 7, 4);
+      // 頂部避雷天線與微紅信標
+      this.ctx.fillStyle = '#64748b';
+      this.ctx.fillRect(ox + 27, bottomLineY - 40, 1, 6);
+      this.ctx.fillStyle = '#ef4444';
+      this.ctx.fillRect(ox + 27, bottomLineY - 41, 1.5, 1.5);
+      // 亮藍與暖黃窗景
+      this.ctx.fillStyle = '#38bdf8';
+      this.ctx.fillRect(ox + 23, bottomLineY - 22, 2, 3);
+      this.ctx.fillRect(ox + 28, bottomLineY - 22, 2, 3);
+      this.ctx.fillStyle = '#fde047';
+      this.ctx.fillRect(ox + 23, bottomLineY - 15, 2, 3);
+      this.ctx.fillRect(ox + 28, bottomLineY - 15, 2, 3);
+      this.ctx.fillRect(ox + 25, bottomLineY - 28, 2, 2);
+
+      // 建築 2: 帆船造型洲際飯店風 (InterContinental Sail silhouette)
+      this.ctx.fillStyle = '#111d33';
+      this.ctx.beginPath();
+      this.ctx.moveTo(ox + 65, bottomLineY);
+      this.ctx.lineTo(ox + 65, bottomLineY - 25);
+      this.ctx.quadraticCurveTo(ox + 78, bottomLineY - 25, ox + 80, bottomLineY);
+      this.ctx.closePath();
+      this.ctx.fill();
+      // 弧形窗光
+      this.ctx.fillStyle = '#7dd3fc';
+      this.ctx.fillRect(ox + 68, bottomLineY - 20, 2, 2);
+      this.ctx.fillRect(ox + 72, bottomLineY - 18, 2, 2);
+      this.ctx.fillRect(ox + 68, bottomLineY - 14, 2, 2);
+      this.ctx.fillRect(ox + 73, bottomLineY - 12, 2, 2);
+
+      // 建築 3: 摩天輪 (Cosmo Clock 21 Ferris Wheel)
+      const fx = ox + 115;
+      const fy = bottomLineY - 10;
+      this.ctx.strokeStyle = 'rgba(236, 72, 153, 0.45)';
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.arc(fx, fy, 8, 0, Math.PI * 2);
+      this.ctx.stroke();
+      // 摩天輪七彩光點
+      this.ctx.fillStyle = '#f472b6';
+      this.ctx.fillRect(fx - 1, fy - 8, 1.5, 1.5);
+      this.ctx.fillRect(fx - 1, fy + 7, 1.5, 1.5);
+      this.ctx.fillStyle = '#38bdf8';
+      this.ctx.fillRect(fx - 8, fy - 1, 1.5, 1.5);
+      this.ctx.fillRect(fx + 7, fy - 1, 1.5, 1.5);
+      this.ctx.fillStyle = '#fde047';
+      this.ctx.fillRect(fx - 5, fy - 5, 1.5, 1.5);
+      this.ctx.fillRect(fx + 4, fy + 4, 1.5, 1.5);
+
+      // 建築 4: 現代方正辦公大樓 (垂直藍霓虹飾條)
+      this.ctx.fillStyle = '#0f172a';
+      this.ctx.fillRect(ox + 135, bottomLineY - 22, 18, 22);
+      this.ctx.fillStyle = '#38bdf8';
+      this.ctx.fillRect(ox + 138, bottomLineY - 20, 1.5, 16); // 藍色垂直光條
+      this.ctx.fillStyle = '#fef08a';
+      for (let r = 0; r < 3; r++) {
+        this.ctx.fillRect(ox + 144, bottomLineY - 19 + r * 5, 4, 2);
+      }
+
+      // 建築 5: 紅磚倉庫／低矮商業街廓 (Red Brick Warehouse)
+      this.ctx.fillStyle = '#1e293b';
+      this.ctx.fillRect(ox + 162, bottomLineY - 11, 26, 11);
+      this.ctx.fillStyle = '#fbbf24';
+      for (let w = 0; w < 4; w++) {
+        this.ctx.fillRect(ox + 166 + w * 5, bottomLineY - 7, 2.5, 2.5);
+      }
+
+      // 建築 6: 階梯式玻璃大廈 (Stepped Glass Tower)
+      this.ctx.fillStyle = '#0d1527';
+      this.ctx.fillRect(ox + 200, bottomLineY - 18, 16, 18);
+      this.ctx.fillRect(ox + 203, bottomLineY - 23, 10, 5);
+      this.ctx.fillStyle = '#38bdf8';
+      this.ctx.fillRect(ox + 207, bottomLineY - 27, 1, 4);
+      this.ctx.fillStyle = '#f0f9ff';
+      this.ctx.fillRect(ox + 204, bottomLineY - 15, 2, 2);
+      this.ctx.fillRect(ox + 209, bottomLineY - 15, 2, 2);
+      this.ctx.fillRect(ox + 204, bottomLineY - 9, 2, 2);
+      this.ctx.fillRect(ox + 209, bottomLineY - 9, 2, 2);
+
+      // 建築 7: 細長電波塔
+      this.ctx.fillStyle = '#475569';
+      this.ctx.fillRect(ox + 235, bottomLineY - 28, 1.5, 28);
+      this.ctx.fillStyle = '#38bdf8';
+      this.ctx.fillRect(ox + 234, bottomLineY - 29, 3, 1.5);
+
+      // 建築 8: 矮平房交錯填補
+      this.ctx.fillStyle = '#131d33';
+      this.ctx.fillRect(ox + 242, bottomLineY - 8, 16, 8);
+      this.ctx.fillStyle = '#f59e0b';
+      this.ctx.fillRect(ox + 246, bottomLineY - 5, 2, 2);
+      this.ctx.fillRect(ox + 252, bottomLineY - 5, 2, 2);
+    }
+
+    // 3. 水面／地面底座與夜景微光倒影 (Waterfront Base & Light Reflections)
+    const baseH = this.height - bottomLineY;
+    const baseGrad = this.ctx.createLinearGradient(0, bottomLineY, 0, this.height);
+    baseGrad.addColorStop(0, '#0c1322');
+    baseGrad.addColorStop(1, '#060a12');
+    this.ctx.fillStyle = baseGrad;
+    this.ctx.fillRect(0, bottomLineY, this.width, baseH);
+
+    // 水面微弱垂直彩色倒影（波光粼粼）
+    for (let m = 0; m < repeatCount; m++) {
+      const ox = m * moduleW;
+      // 地標塔金藍倒影
+      this.ctx.fillStyle = 'rgba(56, 189, 248, 0.06)';
+      this.ctx.fillRect(ox + 22, bottomLineY + 2, 10, 16);
+      // 洲際飯店天藍倒影
+      this.ctx.fillStyle = 'rgba(125, 211, 252, 0.05)';
+      this.ctx.fillRect(ox + 67, bottomLineY + 2, 12, 12);
+      // 摩天輪粉紅倒影
+      this.ctx.fillStyle = 'rgba(244, 114, 182, 0.05)';
+      this.ctx.fillRect(ox + 112, bottomLineY + 2, 8, 14);
+      // 紅磚倉庫暖黃倒影
+      this.ctx.fillStyle = 'rgba(251, 191, 36, 0.06)';
+      this.ctx.fillRect(ox + 165, bottomLineY + 2, 20, 10);
+    }
+
+    // 4. 地平線防禦實線（告別粗硬虛線，以 1.2px 柔和天藍細線勾勒岸線）
+    this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, bottomLineY);
+    this.ctx.lineTo(this.width, bottomLineY);
+    this.ctx.stroke();
+
+    // 5. 右下角低調文字標註（不干擾中央防空砲火）
+    this.ctx.font = '10px monospace';
+    this.ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+    this.ctx.textAlign = 'right';
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillText('🏙️ 地表防線', this.width - 12, bottomLineY + 6);
 
     this.ctx.restore();
   }
