@@ -823,7 +823,10 @@ class KanaTypingGame {
 
   gameOver() {
     this.isPlaying = false;
-    this.lasers = [];
+    this.screenShake = 0;   // 立即重置震動，徹底防止畫面定格震動
+    this.dangerFlash = 0;   // 立即清除紅光危險閃爍
+    this.targets = [];       // 清空殘餘敵人，讓戰場恢復純淨星空
+    this.lasers = [];        // 清除殘餘雷射
     this.lockedTarget = null;
     window.audioManager.playGameOver();
 
@@ -876,8 +879,10 @@ class KanaTypingGame {
     this.isPlaying = false;
     this.isStageCleared = true;
     this.stageClearTime = performance.now();
-    this.targets = []; // 清空殘餘敵人，太空戰場恢復寧靜
-    this.lasers = [];  // 立即清空雷射光束，徹底防止光線定格在畫面上
+    this.screenShake = 0;   // 確保過關時無任何震動殘留
+    this.dangerFlash = 0;   // 確保過關時無任何紅光殘留
+    this.targets = [];      // 清空殘餘敵人，太空戰場恢復寧靜
+    this.lasers = [];       // 立即清空雷射光束，徹底防止光線定格在畫面上
     this.lockedTarget = null;
 
     window.audioManager.playLevelUp();
@@ -1162,8 +1167,8 @@ class KanaTypingGame {
   render() {
     this.ctx.save();
 
-    // 畫面震動位移
-    if (this.screenShake > 0) {
+    // 畫面震動位移（只在遊戲進行戰鬥中震動，失敗或過關結算狀態下絕對保持平穩）
+    if (this.isPlaying && !this.isPaused && this.screenShake > 0) {
       const dx = (Math.random() - 0.5) * this.screenShake * 2;
       const dy = (Math.random() - 0.5) * this.screenShake * 2;
       this.ctx.translate(dx, dy);
@@ -2127,9 +2132,11 @@ class KanaTypingGame {
     if (this.isPlaying && !this.isPaused) {
       this.update(deltaTime);
     } else {
-      // 待機、暫停或過關結算狀態下，維持宇宙基地背景多層次視差星空航行（Ambient Drift）
-      // 過關時星空依然平穩或以巡航速度捲動，沒有任何敵人出現
-      const cruiseProgress = this.isStageCleared ? 0.35 : 0;
+      // 待機、暫停、過關或失敗結算狀態下，維持宇宙基地背景多層次視差星空航行（Ambient Cruise）
+      // 星空持續平穩向下捲動，無任何敵人出現，且畫面絕對保持平穩不震動
+      this.screenShake = 0;
+      this.dangerFlash = 0;
+      const cruiseProgress = 0.35;
       this.updateStars(cruiseProgress);
       this.updateShootingStar();
 
