@@ -823,6 +823,8 @@ class KanaTypingGame {
 
   gameOver() {
     this.isPlaying = false;
+    this.lasers = [];
+    this.lockedTarget = null;
     window.audioManager.playGameOver();
 
     // 計算準確率
@@ -875,6 +877,8 @@ class KanaTypingGame {
     this.isStageCleared = true;
     this.stageClearTime = performance.now();
     this.targets = []; // 清空殘餘敵人，太空戰場恢復寧靜
+    this.lasers = [];  // 立即清空雷射光束，徹底防止光線定格在畫面上
+    this.lockedTarget = null;
 
     window.audioManager.playLevelUp();
 
@@ -1187,20 +1191,22 @@ class KanaTypingGame {
     // 繪製掉落目標
     this.targets.forEach(t => this.renderTarget(t));
 
-    // 繪製雷射射擊
-    this.lasers.forEach(l => {
-      this.ctx.save();
-      this.ctx.strokeStyle = l.color;
-      this.ctx.lineWidth = 3;
-      this.ctx.shadowColor = l.color;
-      this.ctx.shadowBlur = 12;
+    // 繪製雷射射擊（過關狀態下不繪製雷射光束，確保太空戰場視野乾淨）
+    if (!this.isStageCleared) {
+      this.lasers.forEach(l => {
+        this.ctx.save();
+        this.ctx.strokeStyle = l.color;
+        this.ctx.lineWidth = 3;
+        this.ctx.shadowColor = l.color;
+        this.ctx.shadowBlur = 12;
 
-      this.ctx.beginPath();
-      this.ctx.moveTo(l.startX, l.startY);
-      this.ctx.lineTo(l.endX, l.endY);
-      this.ctx.stroke();
-      this.ctx.restore();
-    });
+        this.ctx.beginPath();
+        this.ctx.moveTo(l.startX, l.startY);
+        this.ctx.lineTo(l.endX, l.endY);
+        this.ctx.stroke();
+        this.ctx.restore();
+      });
+    }
 
     // 繪製爆炸粒子
     this.particles.forEach(p => {
@@ -2135,6 +2141,25 @@ class KanaTypingGame {
           p.y += p.vy;
           p.life -= p.decay;
           if (p.life <= 0) this.particles.splice(i, 1);
+        }
+      }
+
+      // 更新殘餘雷射光線迅速消退（雙重保險，避免光束停滯在畫面上）
+      if (this.lasers && this.lasers.length > 0) {
+        for (let i = this.lasers.length - 1; i >= 0; i--) {
+          const l = this.lasers[i];
+          l.progress = (l.progress || 0) + 0.35;
+          if (l.progress >= 1) this.lasers.splice(i, 1);
+        }
+      }
+
+      // 更新殘餘浮動提示文字消退
+      if (this.floatingTexts && this.floatingTexts.length > 0) {
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+          const ft = this.floatingTexts[i];
+          ft.y += ft.vy;
+          ft.life -= 0.05;
+          if (ft.life <= 0) this.floatingTexts.splice(i, 1);
         }
       }
     }
