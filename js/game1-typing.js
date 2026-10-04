@@ -56,6 +56,8 @@ class KanaTypingGame {
     this.stageDefeated = 0;
     this.stageBreached = 0;
     this.stageTargetCount = 50;
+    this.stageQueue = []; // 待發射題目隊列（每關剛好放出 50 個字，漏接/過線自動回流）
+    this.floatingTexts = []; // 浮動文字提示特效隊列
 
     this.initCanvas();
     this.bindEvents();
@@ -215,8 +217,27 @@ class KanaTypingGame {
     this.targets = [];
     this.particles = [];
     this.lasers = [];
+    this.floatingTexts = [];
     this.lockedTarget = null;
     this.mistakeList = [];
+    this.spawnTimer = 0;
+
+    // 初始化本關 50 題目的待發射隊列（總共放出 50 個字，均勻覆蓋題庫）
+    this.stageQueue = [];
+    const pool = this.getQuestionPool();
+    if (pool && pool.length > 0) {
+      while (this.stageQueue.length < this.stageTargetCount) {
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        for (const item of shuffled) {
+          if (this.stageQueue.length < this.stageTargetCount) {
+            this.stageQueue.push(item);
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
     this.setDifficulty(this.difficulty);
     const stageSpeed = (stage && stage.speed) ? stage.speed : 0.85;
     this.baseSpeed = stageSpeed * (this.difficultySpeedFactor || 1.0);
@@ -250,12 +271,24 @@ class KanaTypingGame {
     }
   }
 
-  // 生成新的掉落目標
-  spawnTarget() {
-    const pool = this.getQuestionPool();
-    if (pool.length === 0) return;
+  // 浮動文字特效輔助
+  createFloatingText(x, y, text, color = '#38bdf8') {
+    this.floatingTexts.push({
+      x: x,
+      y: y,
+      text: text,
+      color: color,
+      life: 1.0,
+      vy: -1.2
+    });
+  }
 
-    const item = pool[Math.floor(Math.random() * pool.length)];
+  // 生成新的掉落目標（依序從本關 50 題隊列中發射，隊列空時不額外生成）
+  spawnTarget() {
+    if (!this.stageQueue || this.stageQueue.length === 0) return;
+
+    const item = this.stageQueue.shift();
+    if (!item) return;
 
     // 計算合適的隨機 X 位置，避免超出邊界
     const widthApprox = item.isWord ? 140 : 80;
@@ -268,6 +301,7 @@ class KanaTypingGame {
 
     const target = {
       id: Date.now() + Math.random(),
+      rawItem: item, // 保留原始項目，以利漏接或過線時回流重測
       displayKana: item.displayKana,
       subText: item.subText,
       romajiList: [...(item.romajiList || item.romaji || [])],
@@ -280,12 +314,14 @@ class KanaTypingGame {
       baseSpeed: initialSpeed,
       speed: initialSpeed,
       currentTyped: '',
-      matchedRomaji: null, // 鎖定正在匹配的拼音字串
+      matchedRomaji: null,
       hue: item.isWord ? 45 : (item.displayKana.charCodeAt(0) * 17) % 360,
-      hitShake: 0
+      hitShake: 0,
+      crossedAlertLine: false
     };
 
     this.targets.push(target);
+    this.updateHUD();
   }
 
   // 處理按鍵輸入
@@ -377,7 +413,21 @@ class KanaTypingGame {
 
   // 擊破目標
   destroyTarget(target) {
-    this.stageDefeated++;
+    const alertLineY = this.hintLineY || (this.height * 0.54);
+    const passedAlert = (target.y + target.height >= alertLineY) || target.crossedAlertLine;
+
+    if (passedAlert) {
+      // ⚠️ 字通過警戒線才打掉：該字不算進 GOAL 計算中，而且之後會再補進一次
+      if (target.rawItem) {
+        this.stageQueue.push(target.rawItem);
+      }
+      this.createFloatingText(target.x + target.width / 2, target.y + 10, '⚠️ 過線擊破 (不計GOAL·已回流)', '#fbbf24');
+    } else {
+      // 🎯 在警戒線前打掉：算進 GOAL 計算中，不補進
+      this.stageDefeated++;
+      this.createFloatingText(target.x + target.width / 2, target.y + 10, '🎯 完美擊破 (+1 GOAL)', '#38bdf8');
+    }
+
     this.defeatedCount++;
     this.combo++;
     if (this.combo > this.maxCombo) {
@@ -408,7 +458,7 @@ class KanaTypingGame {
 
     this.updateHUD();
 
-    // 檢查是否達成通關條件
+    // 檢查是否達成通關條件（只有完美擊破數累計達到 stageTargetCount 才通關）
     if (this.stageDefeated >= this.stageTargetCount) {
       this.onStageClear();
     }
@@ -441,6 +491,12 @@ class KanaTypingGame {
     this.screenShake = 12;
     this.dangerFlash = 0.4;
     window.audioManager.playMiss();
+
+    // 依據規則：如果玩家沒打中，除了生命扣一個愛心外，該字之後會再補進一次
+    if (target.rawItem) {
+      this.stageQueue.push(target.rawItem);
+    }
+    this.createFloatingText(target.x + target.width / 2, target.y, '💔 漏接扣心！字卡回流重測', '#ef4444');
 
     // 記錄到失誤清單，方便賽後複習
     if (!this.mistakeList.some(m => m.displayKana === target.displayKana)) {
@@ -674,7 +730,10 @@ class KanaTypingGame {
     const progressBarEl = document.getElementById('stageProgressBar');
 
     if (stageTitleEl && stage) stageTitleEl.textContent = stage.name;
-    if (stageSubtitleEl && stage) stageSubtitleEl.textContent = stage.subtitle;
+    if (stageSubtitleEl && stage) {
+      const pendingTotal = (this.stageQueue ? this.stageQueue.length : 0) + this.targets.length;
+      stageSubtitleEl.textContent = `${stage.subtitle} (待擊: ${pendingTotal})`;
+    }
     if (progressTextEl) progressTextEl.textContent = `${this.stageDefeated} / ${this.stageTargetCount}`;
     if (progressBarEl) {
       const pct = Math.min(100, Math.round((this.stageDefeated / this.stageTargetCount) * 100));
@@ -690,11 +749,15 @@ class KanaTypingGame {
     // 關卡內動態平滑加速（從 1.0x 逐步加速至 1.45x），每進入新關卡時自動恢復為 1.0x 初始速度
     const stageSpeedFactor = 1.0 + stageProgress * 0.45;
 
-    // 敵人生成計時：關卡初始間隔寬鬆，隨進度微調加快，換關時立即重置回初始間隔
+    // 敵人生成計時：只有在隊列中還有待發射題目時才生成
     this.spawnTimer++;
     const currentInterval = Math.max(70, Math.round(this.spawnInterval - stageProgress * 40));
-    if (this.spawnTimer >= currentInterval) {
-      this.spawnTarget();
+    // 若畫面上完全沒有敵人且隊列中還有字，縮短等待時間迅速發射
+    const effectiveInterval = (this.targets.length === 0) ? Math.min(30, currentInterval) : currentInterval;
+    if (this.spawnTimer >= effectiveInterval) {
+      if (this.stageQueue && this.stageQueue.length > 0) {
+        this.spawnTarget();
+      }
       this.spawnTimer = 0;
     }
 
@@ -703,6 +766,7 @@ class KanaTypingGame {
 
     // 更新目標移動（動態應用當前關卡速度曲線）
     const bottomLineY = this.bottomLineY || (this.height - 65);
+    const alertLineY = this.hintLineY || (this.height * 0.54);
     for (let i = this.targets.length - 1; i >= 0; i--) {
       const t = this.targets[i];
       const currentSpeed = (t.baseSpeed || t.speed || this.baseSpeed) * stageSpeedFactor;
@@ -711,9 +775,24 @@ class KanaTypingGame {
 
       if (t.hitShake > 0) t.hitShake--;
 
+      // 檢查是否跨過警戒線
+      if (t.y + t.height >= alertLineY) {
+        t.crossedAlertLine = true;
+      }
+
       // 檢查是否突破底線
       if (t.y + t.height >= bottomLineY) {
         this.onTargetBreach(t);
+      }
+    }
+
+    // 更新浮動提示文字
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy;
+      ft.life -= 0.02;
+      if (ft.life <= 0) {
+        this.floatingTexts.splice(i, 1);
       }
     }
 
@@ -837,6 +916,19 @@ class KanaTypingGame {
       this.ctx.fillStyle = `rgba(239, 68, 68, ${this.dangerFlash})`;
       this.ctx.fillRect(0, 0, this.width, this.height);
     }
+
+    // 繪製浮動提示文字
+    this.floatingTexts.forEach(ft => {
+      this.ctx.save();
+      this.ctx.font = 'bold 12px sans-serif';
+      this.ctx.fillStyle = ft.color;
+      this.ctx.globalAlpha = Math.max(0, ft.life);
+      this.ctx.textAlign = 'center';
+      this.ctx.shadowColor = ft.color;
+      this.ctx.shadowBlur = 8;
+      this.ctx.fillText(ft.text, ft.x, ft.y);
+      this.ctx.restore();
+    });
 
     this.ctx.restore();
   }

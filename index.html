@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>👾 Kana Invaders (假名侵略者) v1.2.4 - 日語闖關防衛戰</title>
+  <title>👾 Kana Invaders (假名侵略者) v1.2.5 - 日語闖關防衛戰</title>
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
   <!-- Tailwind CSS CDN -->
@@ -19,7 +19,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=1.2.4">
+  <link rel="stylesheet" href="css/style.css?v=1.2.5">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
@@ -33,7 +33,7 @@
         <div>
           <h1 class="text-base font-bold tracking-wide text-white flex items-center gap-2">
             Kana Invaders
-            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.2.4</span>
+            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.2.5</span>
           </h1>
         </div>
       </div>
@@ -120,7 +120,7 @@
         <div class="flex items-center gap-3 shrink-0">
           <div class="text-right">
             <div class="text-[10px] text-slate-400 font-mono">STAGE GOAL</div>
-            <div id="stageProgressText" class="text-xs font-mono font-bold text-amber-400">0 / 10</div>
+            <div id="stageProgressText" class="text-xs font-mono font-bold text-amber-400">0 / 50</div>
           </div>
           <div class="w-28 sm:w-44 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/60 p-[1px]">
             <div id="stageProgressBar" class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-amber-400 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -389,14 +389,14 @@
   </div>
 
   <!-- 腳本引入（附帶版本防快取） -->
-  <script src="js/data/kana.js?v=1.2.4"></script>
-  <script src="js/data/words.js?v=1.2.4"></script>
-  <script src="js/data/stages.js?v=1.2.4"></script>
-  <script src="js/audio.js?v=1.2.4"></script>
-  <script src="js/game1-typing.js?v=1.2.4"></script>
+  <script src="js/data/kana.js?v=1.2.5"></script>
+  <script src="js/data/words.js?v=1.2.5"></script>
+  <script src="js/data/stages.js?v=1.2.5"></script>
+  <script src="js/audio.js?v=1.2.5"></script>
+  <script src="js/game1-typing.js?v=1.2.5"></script>
 
   <script>
-    console.log('%c👾 Kana Invaders v1.2.4 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
+    console.log('%c👾 Kana Invaders v1.2.5 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
 
     // 遊戲主流程與 UI 互動事件綁定
     window.addEventListener('DOMContentLoaded', () => {
