@@ -55,7 +55,7 @@ class KanaTypingGame {
     this.maxUnlockedStage = parseInt(localStorage.getItem('kana_max_unlocked_stage') || '0', 10);
     this.stageDefeated = 0;
     this.stageBreached = 0;
-    this.stageTargetCount = 10;
+    this.stageTargetCount = 50;
 
     this.initCanvas();
     this.bindEvents();
@@ -210,7 +210,7 @@ class KanaTypingGame {
     this.defeatedCount = 0;
     this.stageDefeated = 0;
     this.stageBreached = 0;
-    this.stageTargetCount = stage ? stage.targetCount : 12;
+    this.stageTargetCount = stage ? stage.targetCount : 50;
     this.level = this.currentStageIndex + 1;
     this.targets = [];
     this.particles = [];

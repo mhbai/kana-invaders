@@ -72,5 +72,27 @@ window.VOCAB_DATA = [
   { kana: 'なな', kanji: '七', romaji: ['nana', 'shichi'], meaning: '數字 7', category: '數字' },
   { kana: 'はち', kanji: '八', romaji: ['hachi', 'hati'], meaning: '數字 8', category: '數字' },
   { kana: 'きゅう', kanji: '九', romaji: ['kyuu', 'kyu'], meaning: '數字 9', category: '數字' },
-  { kana: 'じゅう', kanji: '十', romaji: ['juu', 'zyu', 'ju'], meaning: '數字 10', category: '數字' }
+  { kana: 'じゅう', kanji: '十', romaji: ['juu', 'zyu', 'ju'], meaning: '數字 10', category: '數字' },
+
+  // === 片假名生活外來語 ===
+  { kana: 'コーヒー', kanji: '', romaji: ['ko-hi-', 'ko-hi', 'koohii'], meaning: '咖啡', category: '片假名外來語' },
+  { kana: 'テレビ', kanji: '', romaji: ['terebi'], meaning: '電視', category: '片假名外來語' },
+  { kana: 'カメラ', kanji: '', romaji: ['kamera'], meaning: '相機', category: '片假名外來語' },
+  { kana: 'パン', kanji: '', romaji: ['pan'], meaning: '麵包', category: '片假名外來語' },
+  { kana: 'バス', kanji: '', romaji: ['basu'], meaning: '公車', category: '片假名外來語' },
+  { kana: 'ホテル', kanji: '', romaji: ['hoteru'], meaning: '飯店／旅館', category: '片假名外來語' },
+  { kana: 'アイス', kanji: '', romaji: ['aisu'], meaning: '冰淇淋', category: '片假名外來語' },
+  { kana: 'ケーキ', kanji: '', romaji: ['ke-ki', 'keeki'], meaning: '蛋糕', category: '片假名外來語' },
+  { kana: 'ミルク', kanji: '', romaji: ['miruku'], meaning: '牛奶', category: '片假名外來語' },
+  { kana: 'トイレ', kanji: '', romaji: ['toire'], meaning: '廁所', category: '片假名外來語' },
+  { kana: 'タクシー', kanji: '', romaji: ['takusi-', 'takushi-', 'takushi'], meaning: '計程車', category: '片假名外來語' },
+  { kana: 'ドア', kanji: '', romaji: ['doa'], meaning: '門', category: '片假名外來語' },
+  { kana: 'ノート', kanji: '', romaji: ['no-to', 'nooto'], meaning: '筆記本', category: '片假名外來語' },
+  { kana: 'ベッド', kanji: '', romaji: ['beddo'], meaning: '床', category: '片假名外來語' },
+  { kana: 'シャツ', kanji: '', romaji: ['shatsu', 'syatu'], meaning: '襯衫', category: '片假名外來語' },
+  { kana: 'ピアノ', kanji: '', romaji: ['piano'], meaning: '鋼琴', category: '片假名外來語' },
+  { kana: 'ギター', kanji: '', romaji: ['gita-', 'gita'], meaning: '吉他', category: '片假名外來語' },
+  { kana: 'ゲーム', kanji: '', romaji: ['ge-mu', 'geemu'], meaning: '遊戲', category: '片假名外來語' },
+  { kana: 'スマホ', kanji: '', romaji: ['sumaho'], meaning: '智慧型手機', category: '片假名外來語' },
+  { kana: 'ビル', kanji: '', romaji: ['biru'], meaning: '大樓', category: '片假名外來語' }
 ];

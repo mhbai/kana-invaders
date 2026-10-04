@@ -1,117 +1,124 @@
-// 關卡進程資料庫（十七大闖關戰役）
+// 關卡進程資料庫（十七大闖關戰役：平假名篇 ➔ 片假名篇 ➔ 實戰與外來語篇）
 window.CAMPAIGN_STAGES = [
+  // ==========================================
+  // 【第一篇章：平假名・基礎與變化篇（第 1 ~ 6 關）】
+  // ==========================================
   {
     id: 1,
-    name: '第 1 關：あ行 初探',
-    subtitle: 'あ・い・う・え・お',
-    targetCount: 10,
+    name: '第 1 關：平假名・あ行 ＆ か行',
+    subtitle: 'あ・い・う・え・お ＋ か・き・く・け・こ',
+    targetCount: 50,
     speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => k.row === 'a' && k.group === 'seion')
+    getPool: () => window.KANA_DATA.filter(k => ['a', 'ka'].includes(k.row) && k.group === 'seion')
   },
   {
     id: 2,
-    name: '第 2 關：か行 斬擊',
-    subtitle: 'か・き・く・け・こ',
-    targetCount: 12,
+    name: '第 2 關：平假名・さ行 ＆ た行',
+    subtitle: 'さ・し・す・せ・そ ＋ た・ち・つ・て・と',
+    targetCount: 50,
     speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => k.row === 'ka' && k.group === 'seion')
+    getPool: () => window.KANA_DATA.filter(k => ['sa', 'ta'].includes(k.row) && k.group === 'seion')
   },
   {
     id: 3,
-    name: '第 3 關：さ行 疾風',
-    subtitle: 'さ・し・す・せ・そ',
-    targetCount: 12,
+    name: '第 3 關：平假名・な行 ＆ は行',
+    subtitle: 'な・に・ぬ・ね・の ＋ は・ひ・ふ・へ・ほ',
+    targetCount: 50,
     speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => k.row === 'sa' && k.group === 'seion')
+    getPool: () => window.KANA_DATA.filter(k => ['na', 'ha'].includes(k.row) && k.group === 'seion')
   },
   {
     id: 4,
-    name: '第 4 關：た行 突擊',
-    subtitle: 'た・ち・つ・て・と',
-    targetCount: 12,
+    name: '第 4 關：平假名・ま行〜わ行 ＆ ん',
+    subtitle: 'ま〜も・や〜よ・ら〜ろ・わ・を・ん',
+    targetCount: 50,
     speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => k.row === 'ta' && k.group === 'seion')
+    getPool: () => window.KANA_DATA.filter(k => ['ma', 'ya', 'ra', 'wa'].includes(k.row) && k.group === 'seion')
   },
   {
     id: 5,
-    name: '第 5 關：な行 漫步',
-    subtitle: 'な・に・ぬ・ね・の',
-    targetCount: 12,
-    speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => k.row === 'na' && k.group === 'seion')
-  },
-  {
-    id: 6,
-    name: '第 6 關：【中場大驗收】あ~な行 總動員',
-    subtitle: '清音前半部綜合 Boss 戰',
-    targetCount: 16,
-    speed: 0.95,
-    isBoss: true,
-    getPool: () => window.KANA_DATA.filter(k => ['a', 'ka', 'sa', 'ta', 'na'].includes(k.row) && k.group === 'seion')
-  },
-  {
-    id: 7,
-    name: '第 7 關：は行 波濤',
-    subtitle: 'は・ひ・ふ・へ・ほ',
-    targetCount: 12,
-    speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => k.row === 'ha' && k.group === 'seion')
-  },
-  {
-    id: 8,
-    name: '第 8 關：ま行 旋律',
-    subtitle: 'ま・み・む・め・も',
-    targetCount: 12,
-    speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => k.row === 'ma' && k.group === 'seion')
-  },
-  {
-    id: 9,
-    name: '第 9 關：や・ら・わ行 終章',
-    subtitle: 'や行・ら行・わ行・拨音 ん',
-    targetCount: 14,
-    speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => ['ya', 'ra', 'wa'].includes(k.row) && k.group === 'seion')
-  },
-  {
-    id: 10,
-    name: '第 10 關：【清音大會戰】五十音試煉',
-    subtitle: '清音 46 假名全域空襲',
-    targetCount: 20,
+    name: '第 5 關：【平假名清音大考驗】五十音總驗收',
+    subtitle: 'あ〜ん 46 個清音全體空襲 Boss 戰',
+    targetCount: 50,
     speed: 0.95,
     isBoss: true,
     getPool: () => window.KANA_DATA.filter(k => k.group === 'seion')
   },
   {
+    id: 6,
+    name: '第 6 關：平假名・濁音、半濁音 ＆ 拗音',
+    subtitle: 'が行〜ぱ行 ＋ きゃ〜ぴょ 變化音空襲',
+    targetCount: 50,
+    speed: 0.85,
+    getPool: () => window.KANA_DATA.filter(k => ['dakuon', 'handakuon', 'yoon'].includes(k.group))
+  },
+
+  // ==========================================
+  // 【第二篇章：片假名・基礎與變化篇（第 7 ~ 12 關）】
+  // ==========================================
+  {
+    id: 7,
+    name: '第 7 關：片假名・ア行 ＆ カ行',
+    subtitle: 'ア・イ・ウ・エ・オ ＋ カ・キ・ク・ケ・コ',
+    targetCount: 50,
+    speed: 0.85,
+    getPool: () => window.KANA_DATA.filter(k => ['a', 'ka'].includes(k.row) && k.group === 'seion').map(k => ({
+      displayKana: k.katakana,
+      subText: k.hiragana,
+      romajiList: k.romaji,
+      isWord: false,
+      originalData: k
+    }))
+  },
+  {
+    id: 8,
+    name: '第 8 關：片假名・サ行 ＆ タ行',
+    subtitle: 'サ・シ・ス・セ・ソ ＋ タ・チ・ツ・テ・ト（辨析 シ vs ツ）',
+    targetCount: 50,
+    speed: 0.85,
+    getPool: () => window.KANA_DATA.filter(k => ['sa', 'ta'].includes(k.row) && k.group === 'seion').map(k => ({
+      displayKana: k.katakana,
+      subText: k.hiragana,
+      romajiList: k.romaji,
+      isWord: false,
+      originalData: k
+    }))
+  },
+  {
+    id: 9,
+    name: '第 9 關：片假名・ナ行 ＆ ハ行',
+    subtitle: 'ナ・ニ・ヌ・ネ・ノ ＋ ハ・ヒ・フ・ヘ・ホ',
+    targetCount: 50,
+    speed: 0.85,
+    getPool: () => window.KANA_DATA.filter(k => ['na', 'ha'].includes(k.row) && k.group === 'seion').map(k => ({
+      displayKana: k.katakana,
+      subText: k.hiragana,
+      romajiList: k.romaji,
+      isWord: false,
+      originalData: k
+    }))
+  },
+  {
+    id: 10,
+    name: '第 10 關：片假名・マ行〜ワ行 ＆ ン',
+    subtitle: 'マ〜モ・ヤ〜ヨ・ラ〜ロ・ワ・ヲ・ン（辨析 ソ vs ン）',
+    targetCount: 50,
+    speed: 0.85,
+    getPool: () => window.KANA_DATA.filter(k => ['ma', 'ya', 'ra', 'wa'].includes(k.row) && k.group === 'seion').map(k => ({
+      displayKana: k.katakana,
+      subText: k.hiragana,
+      romajiList: k.romaji,
+      isWord: false,
+      originalData: k
+    }))
+  },
+  {
     id: 11,
-    name: '第 11 關：濁音降臨・が行 ＆ ざ行',
-    subtitle: 'がぎぐげご、ざじずぜぞ',
-    targetCount: 14,
-    speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => ['ga', 'za'].includes(k.row))
-  },
-  {
-    id: 12,
-    name: '第 12 關：濁音與半濁・だ行・ば行・ぱ行',
-    subtitle: 'だ行、ば行、ぱぴぷぺぽ',
-    targetCount: 15,
-    speed: 0.85,
-    getPool: () => window.KANA_DATA.filter(k => ['da', 'ba', 'pa'].includes(k.row))
-  },
-  {
-    id: 13,
-    name: '第 13 關：拗音旋風',
-    subtitle: 'きゃ、しゃ、ちゃ、にゃ、ひゃ...',
-    targetCount: 15,
-    speed: 0.80,
-    getPool: () => window.KANA_DATA.filter(k => k.group === 'yoon')
-  },
-  {
-    id: 14,
-    name: '第 14 關：片假名崛起',
-    subtitle: 'ア・イ・ウ・エ・オ ... 外來語符號',
-    targetCount: 16,
-    speed: 0.85,
+    name: '第 11 關：【片假名清音大考驗】全域清音總驗收',
+    subtitle: 'ア〜ン 46 個片假名全域空襲 Boss 戰',
+    targetCount: 50,
+    speed: 0.95,
+    isBoss: true,
     getPool: () => window.KANA_DATA.filter(k => k.group === 'seion').map(k => ({
       displayKana: k.katakana,
       subText: k.hiragana,
@@ -121,10 +128,52 @@ window.CAMPAIGN_STAGES = [
     }))
   },
   {
-    id: 15,
-    name: '第 15 關：實戰單字篇・生活日常',
-    subtitle: 'こんにちは、さくら、ほん、くるま...',
-    targetCount: 15,
+    id: 12,
+    name: '第 12 關：片假名・濁音、半濁音 ＆ 拗音',
+    subtitle: 'ガ〜ポ ＋ キャ〜ピョ 片假名變化音空襲',
+    targetCount: 50,
+    speed: 0.85,
+    getPool: () => window.KANA_DATA.filter(k => ['dakuon', 'handakuon', 'yoon'].includes(k.group)).map(k => ({
+      displayKana: k.katakana,
+      subText: k.hiragana,
+      romajiList: k.romaji,
+      isWord: false,
+      originalData: k
+    }))
+  },
+
+  // ==========================================
+  // 【第三篇章：平片混合 ＆ 實戰詞彙篇（第 13 ~ 17 關）】
+  // ==========================================
+  {
+    id: 13,
+    name: '第 13 關：【平片假名大對決】平片雙向混合',
+    subtitle: '平假名 ↔ 片假名 隨機雙向出擊，考驗神經反射',
+    targetCount: 50,
+    speed: 0.90,
+    getPool: () => {
+      const hira = window.KANA_DATA.filter(k => k.group === 'seion').map(k => ({
+        displayKana: k.hiragana,
+        subText: k.katakana,
+        romajiList: k.romaji,
+        isWord: false,
+        originalData: k
+      }));
+      const kata = window.KANA_DATA.filter(k => k.group === 'seion').map(k => ({
+        displayKana: k.katakana,
+        subText: k.hiragana,
+        romajiList: k.romaji,
+        isWord: false,
+        originalData: k
+      }));
+      return [...hira, ...kata];
+    }
+  },
+  {
+    id: 14,
+    name: '第 14 關：【生活實戰單字篇】日常問候與高頻詞',
+    subtitle: 'こんにちは、ありがとう、さくら、ほん、くるま...',
+    targetCount: 50,
     speed: 0.80,
     getPool: () => window.VOCAB_DATA.filter(w => ['問候常用', '自然生活'].includes(w.category)).map(item => ({
       displayKana: item.kana,
@@ -135,12 +184,12 @@ window.CAMPAIGN_STAGES = [
     }))
   },
   {
-    id: 16,
-    name: '第 16 關：實戰單字篇・動物與美食',
-    subtitle: 'ねこ、いぬ、すし、らーめん、りんご...',
-    targetCount: 15,
+    id: 15,
+    name: '第 15 關：【生活實戰單字篇】動物、美食與感覺',
+    subtitle: 'ねこ、いぬ、すし、らーめん、りんご、おいしい...',
+    targetCount: 50,
     speed: 0.80,
-    getPool: () => window.VOCAB_DATA.filter(w => ['可愛動物', '美味飲食'].includes(w.category)).map(item => ({
+    getPool: () => window.VOCAB_DATA.filter(w => ['可愛動物', '美味飲食', '基礎形容詞'].includes(w.category)).map(item => ({
       displayKana: item.kana,
       subText: `${item.meaning} [${item.kanji || item.kana}]`,
       romajiList: item.romaji,
@@ -149,16 +198,37 @@ window.CAMPAIGN_STAGES = [
     }))
   },
   {
+    id: 16,
+    name: '第 16 關：【片假名外來語篇】實用生活外來語',
+    subtitle: 'コーヒー、テレビ、カメラ、パン、バス、ホテル、トイレ...',
+    targetCount: 50,
+    speed: 0.80,
+    getPool: () => window.VOCAB_DATA.filter(w => w.category === '片假名外來語').map(item => ({
+      displayKana: item.kana,
+      subText: `${item.meaning} [外來語]`,
+      romajiList: item.romaji,
+      isWord: true,
+      originalData: item
+    }))
+  },
+  {
     id: 17,
     name: '第 17 關：【終極大決戰】日語全領域冒險',
-    subtitle: '五十音 + 濁拗音 + N5 全詞彙最終試煉',
-    targetCount: 25,
+    subtitle: '平片五十音 ＋ 濁拗音 ＋ N5 外來語全單字最終試煉',
+    targetCount: 50,
     speed: 0.95,
     isBoss: true,
     getPool: () => {
-      const kana = window.KANA_DATA.map(k => ({
+      const hira = window.KANA_DATA.map(k => ({
         displayKana: k.hiragana,
         subText: k.romaji[0],
+        romajiList: k.romaji,
+        isWord: false,
+        originalData: k
+      }));
+      const kata = window.KANA_DATA.map(k => ({
+        displayKana: k.katakana,
+        subText: k.hiragana,
         romajiList: k.romaji,
         isWord: false,
         originalData: k
@@ -170,7 +240,7 @@ window.CAMPAIGN_STAGES = [
         isWord: true,
         originalData: item
       }));
-      return [...kana, ...words];
+      return [...hira, ...kata, ...words];
     }
   }
 ];
