@@ -129,8 +129,8 @@ class KanaTypingGame {
     this.superStar = {
       x: w * 0.86,
       y: h * 0.38,
-      size: 2.8,
-      speed: 0.32,
+      size: 2.4,
+      speed: 0.33,
       baseAlpha: 1.0,
       color: '#ffffff',
       glowColor: '#38bdf8',
@@ -144,7 +144,7 @@ class KanaTypingGame {
     this.pleiadesCluster = {
       cx: w * 0.42,
       cy: h * 0.16,
-      speed: 0.36
+      speed: 0.35
     };
     const clusterOffsets = [
       [-14, -10], [-7, -15], [3, -7],
@@ -157,7 +157,7 @@ class KanaTypingGame {
         offsetY: dy,
         x: this.pleiadesCluster.cx + dx,
         y: this.pleiadesCluster.cy + dy,
-        size: 1.2 + Math.random() * 0.7,
+        size: 1.1 + Math.random() * 0.5,
         baseAlpha: 0.75 + Math.random() * 0.25,
         color: '#bae6fd',
         glowColor: '#38bdf8',
@@ -184,20 +184,20 @@ class KanaTypingGame {
       let size, baseAlpha, speed, isBright = false;
 
       if (r < 0.65) {
-        // 微光星塵 (Micro-stars，數量龐大營造深空深邃感，在極遠背景，速度最慢)
-        size = 0.6 + Math.random() * 0.5;
+        // 微光星塵 (Micro-stars，數量龐大營造深空深邃感，在極遠背景)
+        size = 0.6 + Math.random() * 0.4;
         baseAlpha = 0.25 + Math.random() * 0.35;
-        speed = 0.22 + Math.random() * 0.22;
+        speed = 0.28 + Math.random() * 0.05; // 0.28 ~ 0.33 px/frame
       } else if (r < 0.93) {
         // 中等璀璨主星 (Medium stars，中景天體)
-        size = 1.0 + Math.random() * 0.6;
+        size = 1.0 + Math.random() * 0.4;
         baseAlpha = 0.58 + Math.random() * 0.32;
-        speed = 0.50 + Math.random() * 0.35;
+        speed = 0.35 + Math.random() * 0.06; // 0.35 ~ 0.41 px/frame
       } else {
-        // 耀眼亮星 (Major bright stars，帶有星輝微光暈，前景近星，視差感強烈)
-        size = 1.8 + Math.random() * 0.8;
+        // 耀眼亮星 (Major bright stars，微幅視差層次，速差細微內斂，避免雪花感)
+        size = 1.4 + Math.random() * 0.4;
         baseAlpha = 0.85 + Math.random() * 0.15;
-        speed = 0.90 + Math.random() * 0.45;
+        speed = 0.42 + Math.random() * 0.06; // 0.42 ~ 0.48 px/frame
         isBright = true;
       }
 
@@ -217,15 +217,15 @@ class KanaTypingGame {
     }
   }
 
-  // 更新壯麗星空與星雲向下捲動（宇宙基地多層次視差推進效果）
+  // 更新壯麗星空與星雲向下捲動（宇宙基地多層次視差推進效果，速差細膩自然）
   updateStars(stageProgress = 0) {
     if (!this.stars || this.stars.length === 0) return;
 
-    // 太空基地推進加速係數（隨關卡進度由 1.0x 平滑加速至 2.25x 超空間躍遷感）
-    const warpFactor = 1.0 + stageProgress * 1.25;
+    // 太空基地推進加速係數（隨關卡進度微幅提升，保持星空深邃穩健感）
+    const warpFactor = 1.0 + stageProgress * 0.45;
 
     // 1. 更新銀河星雲微光帶緩慢下移
-    this.galaxyOffsetY = ((this.galaxyOffsetY || 0) + 0.12 * warpFactor) % (this.height * 2);
+    this.galaxyOffsetY = ((this.galaxyOffsetY || 0) + 0.08 * warpFactor) % (this.height * 2);
 
     // 2. 更新昴宿星團整體坐標（保持星團陣型完美固定）
     if (this.pleiadesCluster) {
