@@ -740,16 +740,19 @@ class KanaTypingGame {
       progressBarEl.style.width = `${pct}%`;
     }
 
-    // 即時更新隨 Stage Goal 上升的即時速度倍率指示器 (1.0x ➔ 1.75x)
+    // 即時更新隨 Stage Goal 上升的即時速度倍率指示器 (1.0x ➔ 3.0x 極限狂飆)
     const speedBadgeEl = document.getElementById('hudSpeedBadge');
     if (speedBadgeEl) {
       const stageProgress = Math.min(1.0, this.stageDefeated / Math.max(1, this.stageTargetCount));
-      const factor = 1.0 + stageProgress * 0.75;
+      const factor = 1.0 + stageProgress * 2.0;
       const spd = factor.toFixed(1);
-      if (factor >= 1.5) {
+      if (factor >= 2.5) {
+        speedBadgeEl.className = 'text-[9px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 font-mono border border-purple-400/60 shadow-sm shadow-purple-500/30 animate-pulse';
+        speedBadgeEl.textContent = `⚡ ${spd}x 🚀 MAX`;
+      } else if (factor >= 2.0) {
         speedBadgeEl.className = 'text-[9px] px-1 py-0.5 rounded bg-rose-500/25 text-rose-300 font-mono border border-rose-500/40 animate-pulse';
         speedBadgeEl.textContent = `⚡ ${spd}x 🔥`;
-      } else if (factor >= 1.25) {
+      } else if (factor >= 1.5) {
         speedBadgeEl.className = 'text-[9px] px-1 py-0.5 rounded bg-amber-500/25 text-amber-300 font-mono border border-amber-500/40';
         speedBadgeEl.textContent = `⚡ ${spd}x`;
       } else {
@@ -764,12 +767,12 @@ class KanaTypingGame {
     // 計算當前關卡擊破進度 (0.0 ~ 1.0，隨 Stage Goal 數值提升)
     const stageProgress = Math.min(1.0, this.stageDefeated / Math.max(1, this.stageTargetCount));
 
-    // 關卡內動態加速曲線：隨 Stage Goal 數值上升逐漸顯著加速（從 1.0x 平滑漸進至 1.75x，換新關立即恢復 1.0x）
-    const stageSpeedFactor = 1.0 + stageProgress * 0.75;
+    // 關卡內動態加速曲線：隨 Stage Goal 數值上升自 1.0x 顯著平滑加速至最高 3.0x（換新關立即恢復 1.0x 初始速度）
+    const stageSpeedFactor = 1.0 + stageProgress * 2.0;
 
-    // 敵人生成計時：只有在隊列中還有待發射題目時才生成，隨 Stage Goal 上升縮短間隔
+    // 敵人生成計時：只有在隊列中還有待發射題目時才生成，隨 Stage Goal 上升適度縮短間隔
     this.spawnTimer++;
-    const currentInterval = Math.max(65, Math.round(this.spawnInterval - stageProgress * 55));
+    const currentInterval = Math.max(55, Math.round(this.spawnInterval - stageProgress * 65));
     // 若畫面上完全沒有敵人且隊列中還有字，縮短等待時間迅速發射
     const effectiveInterval = (this.targets.length === 0) ? Math.min(30, currentInterval) : currentInterval;
     if (this.spawnTimer >= effectiveInterval) {
