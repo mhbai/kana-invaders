@@ -850,15 +850,15 @@ class KanaTypingGame {
         reviewContainer.innerHTML = '<p class="text-emerald-400 py-3 text-center">太神了！本局零失誤完全防守！🎯</p>';
       } else {
         reviewContainer.innerHTML = this.mistakeList.map(item => `
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60 hover:border-cyan-500/50 transition">
+          <div class="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-900/40 border border-slate-700/30 hover:border-cyan-500/35 transition">
             <div class="flex items-center gap-3">
-              <span class="text-2xl font-bold text-amber-300 font-jp">${item.displayKana}</span>
+              <span class="text-xl sm:text-2xl font-bold text-amber-300 font-jp">${item.displayKana}</span>
               <div>
-                <div class="text-sm font-semibold text-cyan-300">${item.romaji}</div>
-                ${item.meaning ? `<div class="text-xs text-slate-400">${item.meaning}</div>` : ''}
+                <div class="text-xs sm:text-sm font-semibold text-cyan-300">${item.romaji}</div>
+                ${item.meaning ? `<div class="text-[11px] text-slate-400">${item.meaning}</div>` : ''}
               </div>
             </div>
-            <button onclick="window.audioManager.speak('${item.displayKana}')" class="px-3 py-1 text-xs rounded bg-slate-700 hover:bg-cyan-600 text-white flex items-center gap-1 transition" title="點擊聆聽真人發音">
+            <button onclick="window.audioManager.speak('${item.displayKana}')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800/60 hover:bg-cyan-600/80 border border-slate-700/40 text-white flex items-center gap-1 transition" title="點擊聆聽真人發音">
               🔊 發音
             </button>
           </div>
@@ -1269,7 +1269,7 @@ class KanaTypingGame {
     return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
   }
 
-  // 繪製街機風格太空戰場過關結算面板 (Arcade Battlefield Stage Clear HUD)
+  // 繪製街機風格太空戰場過關結算面板 (Arcade Battlefield Stage Clear HUD - 高透明度、極簡微光低調邊框)
   renderArcadeStageClear() {
     if (!this.stageClearStats) return;
     const stats = this.stageClearStats;
@@ -1285,63 +1285,34 @@ class KanaTypingGame {
 
     this.ctx.save();
 
-    // 1. 半透明科幻座艙玻璃面板底層（可透視後方緩緩流動的深邃星空）
-    this.ctx.shadowColor = '#0284c7';
-    this.ctx.shadowBlur = 24;
-    this.ctx.fillStyle = 'rgba(4, 12, 32, 0.82)';
-    this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
-    this.ctx.lineWidth = 1.8;
+    // 1. 高透明度座艙玻璃面板底層（透明度高達 50%，深空星群與土星流轉清晰可見；邊框極淡柔和）
+    this.ctx.shadowColor = 'rgba(56, 189, 248, 0.08)';
+    this.ctx.shadowBlur = 8;
+    this.ctx.fillStyle = 'rgba(6, 12, 28, 0.48)';
+    this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+    this.ctx.lineWidth = 0.9;
     this.drawRoundRect(this.ctx, left, top, cardW, cardH, 18);
     this.ctx.fill();
     this.ctx.stroke();
 
-    // 2. 街機風格轉角科技護角 (Cyber L-Corner Brackets)
-    const bLen = 14;
-    this.ctx.strokeStyle = '#38bdf8';
-    this.ctx.lineWidth = 2.5;
-    // 左上
-    this.ctx.beginPath();
-    this.ctx.moveTo(left - 2, top + bLen);
-    this.ctx.lineTo(left - 2, top - 2);
-    this.ctx.lineTo(left + bLen, top - 2);
-    this.ctx.stroke();
-    // 右上
-    this.ctx.beginPath();
-    this.ctx.moveTo(left + cardW - bLen, top - 2);
-    this.ctx.lineTo(left + cardW + 2, top - 2);
-    this.ctx.lineTo(left + cardW + 2, top + bLen);
-    this.ctx.stroke();
-    // 左下
-    this.ctx.beginPath();
-    this.ctx.moveTo(left - 2, top + cardH - bLen);
-    this.ctx.lineTo(left - 2, top + cardH + 2);
-    this.ctx.lineTo(left + bLen, top + cardH + 2);
-    this.ctx.stroke();
-    // 右下
-    this.ctx.beginPath();
-    this.ctx.moveTo(left + cardW - bLen, top + cardH + 2);
-    this.ctx.lineTo(left + cardW + 2, top + cardH + 2);
-    this.ctx.lineTo(left + cardW + 2, top + cardH - bLen);
-    this.ctx.stroke();
-
-    // 3. 街機霓虹標題：MISSION ACCOMPLISHED / STAGE CLEAR
-    const pulse = 0.85 + Math.sin(time * 4) * 0.15;
+    // 2. 街機標題：MISSION ACCOMPLISHED / STAGE CLEAR
+    const pulse = 0.75 + Math.sin(time * 3) * 0.15;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     
-    // 頂部慶祝圖示與字樣
+    // 頂部微光字樣
     let curY = top + (isMobile ? 28 : 34);
     this.ctx.font = `bold ${isMobile ? 11 : 12}px monospace`;
     this.ctx.fillStyle = `rgba(56, 189, 248, ${pulse})`;
-    this.ctx.shadowColor = '#38bdf8';
-    this.ctx.shadowBlur = 10;
+    this.ctx.shadowColor = 'rgba(56, 189, 248, 0.3)';
+    this.ctx.shadowBlur = 6;
     this.ctx.fillText('⚡ MISSION ACCOMPLISHED ⚡', cx, curY);
 
     curY += (isMobile ? 24 : 28);
     this.ctx.font = `900 ${isMobile ? 22 : 28}px sans-serif`;
     this.ctx.fillStyle = '#f8fafc';
-    this.ctx.shadowColor = '#06b6d4';
-    this.ctx.shadowBlur = 16;
+    this.ctx.shadowColor = 'rgba(6, 182, 212, 0.35)';
+    this.ctx.shadowBlur = 10;
     this.ctx.fillText(stats.stageTitle || 'STAGE CLEAR', cx, curY);
 
     if (stats.stageSubtitle) {
@@ -1352,30 +1323,30 @@ class KanaTypingGame {
       this.ctx.fillText(stats.stageSubtitle, cx, curY);
     }
 
-    // 4. 星級評定 ⭐⭐⭐
+    // 3. 星級評定 ⭐⭐⭐
     curY += (isMobile ? 26 : 30);
     this.ctx.font = `${isMobile ? 26 : 32}px sans-serif`;
     this.ctx.shadowColor = '#eab308';
-    this.ctx.shadowBlur = 12;
+    this.ctx.shadowBlur = 8;
     const starStr = '⭐'.repeat(stats.stars) + '☆'.repeat(3 - stats.stars);
     this.ctx.fillText(starStr, cx, curY);
 
-    // 5. 防護回血獎勵標章
+    // 4. 防護回血獎勵標章（半透明低調微框）
     curY += (isMobile ? 22 : 25);
     this.ctx.font = `bold ${isMobile ? 10 : 11}px sans-serif`;
     this.ctx.shadowBlur = 0;
     const healText = stats.healed ? '🛡️ 基地防衛成功 · 生命防護 +1 ❤️' : '🛡️ 基地防衛成功 · 完美守護';
     const healW = this.ctx.measureText(healText).width + 20;
-    this.ctx.fillStyle = 'rgba(244, 63, 94, 0.16)';
-    this.ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
-    this.ctx.lineWidth = 1;
+    this.ctx.fillStyle = 'rgba(244, 63, 94, 0.08)';
+    this.ctx.strokeStyle = 'rgba(244, 63, 94, 0.20)';
+    this.ctx.lineWidth = 0.8;
     this.drawRoundRect(this.ctx, cx - healW / 2, curY - 10, healW, 20, 10);
     this.ctx.fill();
     this.ctx.stroke();
     this.ctx.fillStyle = '#fda4af';
     this.ctx.fillText(healText, cx, curY);
 
-    // 6. 嵌入式數據看板（4 大指標：目前總分、關卡擊破、最大連擊、本關命中率）
+    // 5. 嵌入式數據看板（4 大指標：目前總分、關卡擊破、最大連擊、本關命中率）
     curY += (isMobile ? 20 : 22);
     const statItems = [
       { label: '目前總分', value: `${stats.score}`, color: '#38bdf8' },
@@ -1396,9 +1367,9 @@ class KanaTypingGame {
       for (let i = 0; i < 4; i++) {
         const item = statItems[i];
         const bx = startX + i * (colW + boxGap);
-        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
-        this.ctx.strokeStyle = 'rgba(51, 65, 85, 0.7)';
-        this.ctx.lineWidth = 1;
+        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+        this.ctx.strokeStyle = 'rgba(71, 85, 105, 0.22)';
+        this.ctx.lineWidth = 0.8;
         this.drawRoundRect(this.ctx, bx, curY, colW, boxH, 8);
         this.ctx.fill();
         this.ctx.stroke();
@@ -1422,9 +1393,9 @@ class KanaTypingGame {
         const bx = left + padX + col * (colW + boxGap);
         const by = curY + row * (boxH + 6);
 
-        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
-        this.ctx.strokeStyle = 'rgba(51, 65, 85, 0.7)';
-        this.ctx.lineWidth = 1;
+        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+        this.ctx.strokeStyle = 'rgba(71, 85, 105, 0.22)';
+        this.ctx.lineWidth = 0.8;
         this.drawRoundRect(this.ctx, bx, by, colW, boxH, 8);
         this.ctx.fill();
         this.ctx.stroke();
@@ -1440,7 +1411,7 @@ class KanaTypingGame {
       curY += boxH * 2 + 18;
     }
 
-    // 7. 街機互動按鈕區：進入下一關 + 重練本關
+    // 6. 街機互動按鈕區：進入下一關 + 重練本關
     const btnH = isMobile ? 38 : 42;
     const btnPadX = isMobile ? 16 : 24;
     const btnTotalW = cardW - btnPadX * 2;
@@ -1457,15 +1428,18 @@ class KanaTypingGame {
       replay: { x: replayX, y: btnY, w: replayW, h: btnH }
     };
 
-    // 進入下一關按鈕（漸層發光按鈕）
+    // 進入下一關按鈕（半透明漸層微光）
     const nextGrad = this.ctx.createLinearGradient(nextX, btnY, nextX + nextW, btnY + btnH);
-    nextGrad.addColorStop(0, '#06b6d4');
-    nextGrad.addColorStop(1, '#2563eb');
+    nextGrad.addColorStop(0, 'rgba(6, 182, 212, 0.88)');
+    nextGrad.addColorStop(1, 'rgba(37, 99, 235, 0.88)');
     this.ctx.fillStyle = nextGrad;
-    this.ctx.shadowColor = '#06b6d4';
-    this.ctx.shadowBlur = 12;
+    this.ctx.strokeStyle = 'rgba(103, 232, 249, 0.25)';
+    this.ctx.lineWidth = 0.8;
+    this.ctx.shadowColor = 'rgba(6, 182, 212, 0.3)';
+    this.ctx.shadowBlur = 8;
     this.drawRoundRect(this.ctx, nextX, btnY, nextW, btnH, 10);
     this.ctx.fill();
+    this.ctx.stroke();
     this.ctx.shadowBlur = 0;
 
     this.ctx.font = `bold ${isMobile ? 12 : 14}px sans-serif`;
@@ -1473,10 +1447,10 @@ class KanaTypingGame {
     const nextText = stats.isLastStage ? '🏆 全部通關！再玩一次 ➔' : '進入下一關 ➔ (Space / Enter)';
     this.ctx.fillText(nextText, nextX + nextW / 2, btnY + btnH / 2);
 
-    // 重練本關按鈕（低調暗色）
-    this.ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
-    this.ctx.strokeStyle = 'rgba(71, 85, 105, 0.8)';
-    this.ctx.lineWidth = 1;
+    // 重練本關按鈕（低調半透明暗色）
+    this.ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+    this.ctx.strokeStyle = 'rgba(71, 85, 105, 0.30)';
+    this.ctx.lineWidth = 0.8;
     this.drawRoundRect(this.ctx, replayX, btnY, replayW, btnH, 10);
     this.ctx.fill();
     this.ctx.stroke();
