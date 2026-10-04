@@ -84,10 +84,114 @@ class KanaTypingGame {
 
       this.cannon.x = this.width / 2;
       this.cannon.y = this.height - 40;
+
+      if (!this.stars || this.stars.length === 0) {
+        this.initStars();
+        this.initShootingStar();
+      }
     };
 
     window.addEventListener('resize', resize);
     resize();
+  }
+
+  // 初始化壯麗繁星系統（300+ 顆多層次星群、色彩分佈、昴宿星團與天狼星超巨星）
+  initStars() {
+    this.stars = [];
+    const count = 320;
+
+    // 1. 特殊大巨星（如金星／天狼星，具備柔和光暈與四芒星衍射光線）
+    this.stars.push({
+      nx: 0.86,
+      ny: 0.38,
+      size: 2.8,
+      baseAlpha: 1.0,
+      color: '#ffffff',
+      glowColor: '#38bdf8',
+      twinkleSpeed: 1.2,
+      twinklePhase: 0,
+      isSuperStar: true
+    });
+
+    // 2. 昴宿星團 (Pleiades / Subaru Cluster，7 顆精緻相偎的微星群)
+    const clusterCx = 0.42;
+    const clusterCy = 0.16;
+    const clusterOffsets = [
+      [-0.012, -0.008], [-0.006, -0.012], [0.002, -0.006],
+      [0.008, -0.002], [-0.004, 0.005], [0.006, 0.006], [0.012, 0.002]
+    ];
+    for (const [dx, dy] of clusterOffsets) {
+      this.stars.push({
+        nx: clusterCx + dx,
+        ny: clusterCy + dy,
+        size: 1.2 + Math.random() * 0.7,
+        baseAlpha: 0.75 + Math.random() * 0.25,
+        color: '#bae6fd',
+        glowColor: '#38bdf8',
+        twinkleSpeed: 2.0 + Math.random() * 1.5,
+        twinklePhase: Math.random() * Math.PI * 2,
+        isClusterStar: true
+      });
+    }
+
+    // 3. 散佈於全天候的壯麗繁星群（層次星塵、主星、耀眼亮星與天然光譜色系）
+    const colorPalette = [
+      '#ffffff', '#ffffff', '#ffffff', '#ffffff', // 經典鑽石白 (50%)
+      '#e0f2fe', '#bae6fd', '#7dd3fc',          // 仙女座／織女星天藍色系 (35%)
+      '#fef08a', '#fde68a',                      // 參宿四／大角星暖金星系 (12%)
+      '#fbcfe8'                                  // 微粉星塵 (3%)
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const nx = Math.random();
+      // 稍微偏向上空（ny: 0.01 ~ 0.88），避開地平線底部
+      const ny = Math.pow(Math.random(), 0.88) * 0.86;
+      const r = Math.random();
+      let size, baseAlpha, isBright = false;
+
+      if (r < 0.65) {
+        // 微光星塵 (Micro-stars，數量龐大營造浩瀚深邃感)
+        size = 0.6 + Math.random() * 0.5;
+        baseAlpha = 0.25 + Math.random() * 0.35;
+      } else if (r < 0.94) {
+        // 中等璀璨主星 (Medium stars)
+        size = 1.0 + Math.random() * 0.6;
+        baseAlpha = 0.58 + Math.random() * 0.32;
+      } else {
+        // 耀眼亮星 (Major bright stars，帶有星輝微光暈)
+        size = 1.8 + Math.random() * 0.8;
+        baseAlpha = 0.85 + Math.random() * 0.15;
+        isBright = true;
+      }
+
+      const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+
+      this.stars.push({
+        nx,
+        ny,
+        size,
+        baseAlpha,
+        color,
+        twinkleSpeed: 0.8 + Math.random() * 2.8,
+        twinklePhase: Math.random() * Math.PI * 2,
+        isBright
+      });
+    }
+  }
+
+  // 初始化夜空流星系統
+  initShootingStar() {
+    this.shootingStar = {
+      active: false,
+      x: 0,
+      y: 0,
+      length: 0,
+      vx: 0,
+      vy: 0,
+      life: 0,
+      maxLife: 0,
+      nextTime: performance.now() + 6000 + Math.random() * 8000
+    };
   }
 
   bindEvents() {
@@ -840,6 +944,33 @@ class KanaTypingGame {
       }
     }
 
+    // 更新夜空偶現流星
+    if (this.shootingStar) {
+      const now = performance.now();
+      if (!this.shootingStar.active && now >= this.shootingStar.nextTime) {
+        this.shootingStar.active = true;
+        this.shootingStar.x = Math.random() * (this.width * 0.75);
+        this.shootingStar.y = 15 + Math.random() * (this.height * 0.35);
+        const speed = 9 + Math.random() * 5;
+        const angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.35;
+        this.shootingStar.vx = Math.cos(angle) * speed;
+        this.shootingStar.vy = Math.sin(angle) * speed;
+        this.shootingStar.life = 1.0;
+        this.shootingStar.maxLife = 26 + Math.random() * 12;
+        this.shootingStar.length = 40 + Math.random() * 40;
+        this.shootingStar.nextTime = now + 12000 + Math.random() * 14000;
+      }
+
+      if (this.shootingStar.active) {
+        this.shootingStar.x += this.shootingStar.vx;
+        this.shootingStar.y += this.shootingStar.vy;
+        this.shootingStar.life -= 1.0 / this.shootingStar.maxLife;
+        if (this.shootingStar.life <= 0) {
+          this.shootingStar.active = false;
+        }
+      }
+    }
+
     // 畫面震動衰退
     if (this.screenShake > 0) this.screenShake *= 0.85;
     if (this.screenShake < 0.2) this.screenShake = 0;
@@ -860,11 +991,17 @@ class KanaTypingGame {
       this.ctx.translate(dx, dy);
     }
 
-    // 清空背景
-    this.ctx.fillStyle = '#090d16';
+    // 清空背景：深邃壯麗夜空漸層（自太虛宇宙深黑過渡至地平線星空深藍）
+    const skyGrad = this.ctx.createLinearGradient(0, 0, 0, this.height);
+    skyGrad.addColorStop(0, '#030712');      // 天頂：太虛深黑
+    skyGrad.addColorStop(0.35, '#050d22');   // 上空：午夜幽藍
+    skyGrad.addColorStop(0.65, '#081738');   // 中天：星空深湛藍
+    skyGrad.addColorStop(0.92, '#0c2048');   // 近地平線：夜空微光
+    skyGrad.addColorStop(1.0, '#0a152b');
+    this.ctx.fillStyle = skyGrad;
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // 繪製科技星光微粒背景
+    // 繪製壯麗星空與銀河星塵 (Magnificent Starry Night Sky, Milky Way & Shooting Star)
     this.renderStarfield();
 
     // 1. 繪製「地球大氣層透明白霧區」(Earth Atmosphere Mist Layer)
@@ -927,14 +1064,129 @@ class KanaTypingGame {
     this.ctx.restore();
   }
 
+  // 繪製「壯麗星空與銀河」(Magnificent Starfield, Milky Way & Shooting Star)
   renderStarfield() {
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    if (!this.stars || this.stars.length === 0) return;
     const time = performance.now() * 0.001;
-    for (let i = 0; i < 35; i++) {
-      const sx = ((i * 97) % this.width);
-      const sy = ((i * 123 + time * 35) % this.height);
-      this.ctx.fillRect(sx, sy, (i % 3 === 0 ? 2 : 1), (i % 3 === 0 ? 2 : 1));
+    this.ctx.save();
+
+    // 1. 銀河星雲微光帶 (Milky Way Galactic Dust Bands)
+    // 第一道主銀河斜射星雲帶
+    const galaxyGrad1 = this.ctx.createLinearGradient(0, 0, this.width * 0.85, this.height * 0.7);
+    galaxyGrad1.addColorStop(0.0, 'rgba(56, 189, 248, 0)');
+    galaxyGrad1.addColorStop(0.35, 'rgba(99, 102, 241, 0.045)');
+    galaxyGrad1.addColorStop(0.55, 'rgba(56, 189, 248, 0.06)');
+    galaxyGrad1.addColorStop(0.70, 'rgba(147, 197, 253, 0.035)');
+    galaxyGrad1.addColorStop(1.0, 'rgba(30, 58, 138, 0)');
+    this.ctx.fillStyle = galaxyGrad1;
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    // 第二道星團核心柔和光芒（右上部星團星雲）
+    const galaxyGrad2 = this.ctx.createRadialGradient(
+      this.width * 0.78, this.height * 0.32, 10,
+      this.width * 0.78, this.height * 0.32, 220
+    );
+    galaxyGrad2.addColorStop(0, 'rgba(224, 242, 254, 0.06)');
+    galaxyGrad2.addColorStop(0.4, 'rgba(99, 102, 241, 0.035)');
+    galaxyGrad2.addColorStop(1, 'rgba(15, 23, 42, 0)');
+    this.ctx.fillStyle = galaxyGrad2;
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    // 2. 繪製壯麗繁星 (300+ 顆多層次星群)
+    for (let i = 0; i < this.stars.length; i++) {
+      const star = this.stars[i];
+      const sx = star.nx * this.width;
+      const sy = star.ny * this.height;
+
+      // 閃爍呼吸光感 (Gentle Scintillation)
+      const twinkle = 0.72 + Math.sin(time * star.twinkleSpeed + star.twinklePhase) * 0.28;
+      const alpha = Math.min(1.0, Math.max(0.1, star.baseAlpha * twinkle));
+
+      if (star.isSuperStar) {
+        // 金星／天狼星級別超大巨星：多層日冕光暈 + 四芒星衍射光線 (Diffraction Spikes)
+        this.ctx.save();
+        this.ctx.shadowColor = star.glowColor || '#38bdf8';
+        this.ctx.shadowBlur = 12;
+        this.ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, star.size, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // 柔和十字星芒 (Cross-spike diffraction)
+        this.ctx.strokeStyle = `rgba(224, 242, 254, ${alpha * 0.7})`;
+        this.ctx.lineWidth = 0.8;
+        this.ctx.beginPath();
+        // 水平星芒
+        this.ctx.moveTo(sx - 9, sy);
+        this.ctx.lineTo(sx + 9, sy);
+        // 垂直星芒
+        this.ctx.moveTo(sx, sy - 9);
+        this.ctx.lineTo(sx, sy + 9);
+        this.ctx.stroke();
+        this.ctx.restore();
+      } else if (star.isBright) {
+        // 一等耀眼亮星：柔和星光圓暈
+        this.ctx.save();
+        this.ctx.shadowColor = star.color;
+        this.ctx.shadowBlur = 6;
+        this.ctx.fillStyle = star.color;
+        this.ctx.globalAlpha = alpha;
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, star.size, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      } else if (star.isClusterStar) {
+        // 昴宿星團成員星
+        this.ctx.save();
+        this.ctx.shadowColor = '#38bdf8';
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillStyle = star.color;
+        this.ctx.globalAlpha = alpha;
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, star.size, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      } else {
+        // 大量背景星塵與二三等星（極致效能快繪）
+        this.ctx.fillStyle = star.color;
+        this.ctx.globalAlpha = alpha;
+        this.ctx.fillRect(sx, sy, star.size, star.size);
+      }
     }
+
+    // 3. 偶然劃過天際的流星 (Shooting Star / Meteor)
+    if (this.shootingStar && this.shootingStar.active && this.shootingStar.life > 0) {
+      const ss = this.shootingStar;
+      const headX = ss.x;
+      const headY = ss.y;
+      const speed = Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy) || 1;
+      const tailX = headX - (ss.vx / speed) * ss.length;
+      const tailY = headY - (ss.vy / speed) * ss.length;
+
+      const meteorGrad = this.ctx.createLinearGradient(tailX, tailY, headX, headY);
+      meteorGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      meteorGrad.addColorStop(0.65, `rgba(56, 189, 248, ${ss.life * 0.45})`);
+      meteorGrad.addColorStop(1, `rgba(255, 255, 255, ${ss.life * 0.95})`);
+
+      this.ctx.save();
+      this.ctx.strokeStyle = meteorGrad;
+      this.ctx.lineWidth = 1.6;
+      this.ctx.beginPath();
+      this.ctx.moveTo(tailX, tailY);
+      this.ctx.lineTo(headX, headY);
+      this.ctx.stroke();
+
+      // 流星頭部微芒
+      this.ctx.shadowColor = '#38bdf8';
+      this.ctx.shadowBlur = 6;
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${ss.life})`;
+      this.ctx.beginPath();
+      this.ctx.arc(headX, headY, 1.5, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.restore();
+    }
+
+    this.ctx.restore();
   }
 
   // 繪製「地球大氣層」(如同太空俯瞰地球大氣層邊緣：淡淡一層藍白漸層，靜態優雅，不喧賓奪主)
