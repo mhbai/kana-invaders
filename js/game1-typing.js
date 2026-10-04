@@ -284,12 +284,12 @@ class KanaTypingGame {
         st.active = true;
         st.y = -st.ringOuterR - 35;
         st.x = this.width * 0.18 + Math.random() * (this.width * 0.64);
-        st.tilt = -0.32 - Math.random() * 0.12;
+        st.tilt = -0.18 - Math.random() * 0.08;
       }
     }
   }
 
-  // 初始化巨型光環土星系統 (Majestic Ringed Saturn Gas Giant)
+  // 初始化巨型光環土星系統 (Majestic Ringed Saturn Gas Giant - 寫實天文望遠鏡低調典雅美學)
   initSaturn() {
     const w = this.width || 800;
     const h = this.height || 600;
@@ -298,9 +298,10 @@ class KanaTypingGame {
       x: w * 0.74,
       y: h * 0.20,
       radius: 26,       // 行星本體半徑 (直徑 52px，大顆醒目)
-      ringOuterR: 70,   // 光環外徑長軸 (全寬 140px，壯麗華美)
-      ringInnerR: 36,   // 光環內徑長軸
-      tilt: -0.38,      // 自轉軸傾斜角度 (-22 度)
+      ringOuterR: 72,   // 光環外徑長軸 (全寬 144px)
+      ringInnerR: 38,   // 光環內徑長軸
+      ratio: 0.35,      // 橢圓扁率 (與參考天文照一致的優雅環角)
+      tilt: -0.22,      // 自轉軸傾斜角度 (-12.6 度，典雅寫實)
       speed: 0.15,      // 宏大天體穩健巡航速度
       nextTime: 0
     };
@@ -1623,7 +1624,7 @@ class KanaTypingGame {
     this.ctx.restore();
   }
 
-  // 繪製浩瀚壯麗的巨型光環土星 (Majestic Ringed Saturn Gas Giant)
+  // 繪製浩瀚壯麗的巨型光環土星 (Majestic Ringed Saturn Gas Giant - 參考天文觀測照之低調沉穩色彩)
   renderSaturn(st) {
     if (!st || !st.active) return;
     const ctx = this.ctx;
@@ -1632,60 +1633,60 @@ class KanaTypingGame {
     ctx.rotate(st.tilt);
 
     const r = st.radius;          // 行星半徑 (約 26px)
-    const outR = st.ringOuterR;    // 光環外長軸 (約 70px)
-    const inR = st.ringInnerR;     // 光環內長軸 (約 36px)
-    const ratio = 0.27;           // 橢圓扁率 (短軸/長軸)
+    const outR = st.ringOuterR;    // 光環外長軸 (約 72px)
+    const inR = st.ringInnerR;     // 光環內長軸 (約 38px)
+    const ratio = st.ratio || 0.35; // 橢圓扁率 (短軸/長軸)
 
     // --- A. 光環後半段（位於行星球體後方，y < 0）---
     ctx.save();
     ctx.beginPath();
-    ctx.rect(-outR - 15, -outR - 15, (outR + 15) * 2, outR + 15);
+    ctx.rect(-outR - 20, -outR - 20, (outR + 20) * 2, outR + 20);
     ctx.clip();
     this.drawSaturnRings(ctx, outR, inR, ratio, r);
     ctx.restore();
 
-    // --- B. 土星本體球體 (Gas Giant Sphere with Atmospheric Bands) ---
+    // --- B. 土星本體球體 (Gas Giant Sphere with Muted Atmospheric Bands) ---
     ctx.save();
-    // 行星大氣溫潤金色微光暈
-    ctx.shadowColor = 'rgba(253, 230, 138, 0.45)';
-    ctx.shadowBlur = 18;
+    // 極淡微光暈（去除刺眼高飽和黃光，營造深空真實沉靜感）
+    ctx.shadowColor = 'rgba(215, 210, 195, 0.12)';
+    ctx.shadowBlur = 6;
 
-    // 球體 3D 漸層（光源自左上方）
+    // 球體 3D 漸層（低飽和米杏、灰褐、暗石板陰影，呈現真實天文望遠鏡質感）
     const sphereGrad = ctx.createRadialGradient(
-      -r * 0.35, -r * 0.35, r * 0.08,
+      -r * 0.32, -r * 0.32, r * 0.06,
       0, 0, r
     );
-    sphereGrad.addColorStop(0.0, '#fef9c3'); // 陽照高光：米白金
-    sphereGrad.addColorStop(0.2, '#fde68a'); // 暖金氣體帶
-    sphereGrad.addColorStop(0.42, '#f59e0b'); // 琥珀條紋
-    sphereGrad.addColorStop(0.65, '#d97706'); // 焦糖條紋
-    sphereGrad.addColorStop(0.85, '#92400e'); // 深褐色暗帶
-    sphereGrad.addColorStop(0.96, '#451a03'); // 背光陰影
-    sphereGrad.addColorStop(1.0, '#1c1917'); // 深黑背光邊緣
+    sphereGrad.addColorStop(0.0, '#ded5bf'); // 陽照高光：低調柔和米白灰
+    sphereGrad.addColorStop(0.28, '#c4b99f'); // 柔和淺卡其砂色
+    sphereGrad.addColorStop(0.55, '#9e957e'); // 灰褐色過渡
+    sphereGrad.addColorStop(0.78, '#6e6755'); // 暗石板橄欖灰
+    sphereGrad.addColorStop(0.92, '#3e3a30'); // 背光陰影
+    sphereGrad.addColorStop(1.0, '#1a1915');  // 深邃太空邊緣
 
     ctx.fillStyle = sphereGrad;
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // 行星表面水平氣體條紋（限制於球體內部）
+    // 行星表面水平氣體條紋（低對比淡雅雲帶）
     ctx.clip();
     const bands = [
-      { y: -r * 0.58, h: 3, color: 'rgba(254, 243, 199, 0.3)' },
-      { y: -r * 0.32, h: 4, color: 'rgba(180, 83, 9, 0.25)' },
-      { y: -r * 0.06, h: 5, color: 'rgba(217, 119, 6, 0.25)' },
-      { y: r * 0.22, h: 3.5, color: 'rgba(254, 240, 138, 0.25)' },
-      { y: r * 0.48, h: 4.5, color: 'rgba(120, 53, 15, 0.3)' }
+      { y: -r * 0.58, h: 3.2, color: 'rgba(75, 70, 58, 0.25)' },
+      { y: -r * 0.36, h: 4.0, color: 'rgba(210, 202, 182, 0.18)' },
+      { y: -r * 0.15, h: 3.5, color: 'rgba(95, 90, 75, 0.22)' },
+      { y:  r * 0.08, h: 4.5, color: 'rgba(225, 218, 198, 0.22)' },
+      { y:  r * 0.30, h: 5.0, color: 'rgba(145, 138, 118, 0.20)' },
+      { y:  r * 0.54, h: 3.5, color: 'rgba(60, 56, 45, 0.30)' }
     ];
     for (const b of bands) {
       ctx.fillStyle = b.color;
       ctx.fillRect(-r, b.y, r * 2, b.h);
     }
 
-    // 光環在土星本體上投影的弧形暗影 (Shadow of Ring on Planet)
-    ctx.fillStyle = 'rgba(15, 10, 6, 0.52)';
+    // 光環在土星本體上投影的細膩暗影 (Shadow of Ring on Planet)
+    ctx.fillStyle = 'rgba(18, 16, 14, 0.55)';
     ctx.beginPath();
-    ctx.ellipse(0, r * 0.14, r * 0.95, r * 0.12, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, r * 0.12, r * 0.96, r * 0.10, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -1693,7 +1694,7 @@ class KanaTypingGame {
     // --- C. 光環前半段（穿過行星前方，y >= 0）---
     ctx.save();
     ctx.beginPath();
-    ctx.rect(-outR - 15, 0, (outR + 15) * 2, outR + 15);
+    ctx.rect(-outR - 20, 0, (outR + 20) * 2, outR + 20);
     ctx.clip();
     this.drawSaturnRings(ctx, outR, inR, ratio, r);
     ctx.restore();
@@ -1701,55 +1702,53 @@ class KanaTypingGame {
     ctx.restore();
   }
 
-  // 繪製土星多層次精緻光環結構 (A環、卡西尼環縫、B環、C環)
+  // 繪製土星多層次精緻光環結構 (A環、卡西尼環縫、B環、C環 - 低調銀灰骨白質感)
   drawSaturnRings(ctx, outR, inR, ratio, planetR) {
-    // 1. C環（最內圈薄環）
     ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(0, 0, inR, inR * ratio, 0, 0, Math.PI * 2);
-    ctx.ellipse(0, 0, inR * 0.82, (inR * 0.82) * ratio, 0, 0, Math.PI * 2, true);
-    ctx.fillStyle = 'rgba(254, 243, 199, 0.2)';
-    ctx.fill('evenodd');
-    ctx.restore();
+    ctx.scale(1, ratio); // 將同心圓縮放為橢圓，使放射狀漸層完全貼合橢圓環帶
 
-    // 2. B環（最亮的主冰環）
-    const bOuterR = outR * 0.79;
-    ctx.save();
+    // 1. C環（最內圈暗淡薄環 / Crepe Ring）
     ctx.beginPath();
-    ctx.ellipse(0, 0, bOuterR, bOuterR * ratio, 0, 0, Math.PI * 2);
-    ctx.ellipse(0, 0, inR, inR * ratio, 0, 0, Math.PI * 2, true);
+    ctx.arc(0, 0, inR, 0, Math.PI * 2);
+    ctx.arc(0, 0, inR * 0.80, 0, Math.PI * 2, true);
+    ctx.fillStyle = 'rgba(110, 105, 95, 0.15)';
+    ctx.fill('evenodd');
+
+    // 2. B環（最亮主冰環：低飽和銀灰與低調骨白）
+    const bOuterR = outR * 0.79;
+    ctx.beginPath();
+    ctx.arc(0, 0, bOuterR, 0, Math.PI * 2);
+    ctx.arc(0, 0, inR, 0, Math.PI * 2, true);
     const bGrad = ctx.createRadialGradient(0, 0, inR, 0, 0, bOuterR);
-    bGrad.addColorStop(0.0, 'rgba(253, 224, 71, 0.45)');
-    bGrad.addColorStop(0.35, 'rgba(254, 240, 138, 0.75)');
-    bGrad.addColorStop(0.75, 'rgba(250, 204, 21, 0.65)');
-    bGrad.addColorStop(1.0, 'rgba(234, 179, 8, 0.35)');
+    bGrad.addColorStop(0.0, 'rgba(145, 140, 126, 0.25)'); // 內側過渡
+    bGrad.addColorStop(0.38, 'rgba(202, 196, 178, 0.65)'); // 最亮核心區：骨白銀灰
+    bGrad.addColorStop(0.82, 'rgba(178, 172, 155, 0.58)'); // 主環中外層
+    bGrad.addColorStop(1.0, 'rgba(135, 130, 115, 0.38)');  // 環縫前收邊
     ctx.fillStyle = bGrad;
     ctx.fill('evenodd');
-    ctx.restore();
 
-    // 3. 卡西尼環縫 (Cassini Division): bOuterR (0.79) 到 aInnerR (0.83) 留空，深空背景透出！
+    // 3. 卡西尼環縫 (Cassini Division): bOuterR (0.79) 到 aInnerR (0.83) 自然留空，深空背景透出！
 
-    // 4. A環（外側光環）
+    // 4. A環（外側光環：略暗於B環的細膩石板灰銀）
     const aInnerR = outR * 0.83;
-    ctx.save();
     ctx.beginPath();
-    ctx.ellipse(0, 0, outR, outR * ratio, 0, 0, Math.PI * 2);
-    ctx.ellipse(0, 0, aInnerR, aInnerR * ratio, 0, 0, Math.PI * 2, true);
+    ctx.arc(0, 0, outR, 0, Math.PI * 2);
+    ctx.arc(0, 0, aInnerR, 0, Math.PI * 2, true);
     const aGrad = ctx.createRadialGradient(0, 0, aInnerR, 0, 0, outR);
-    aGrad.addColorStop(0.0, 'rgba(254, 240, 138, 0.45)');
-    aGrad.addColorStop(0.65, 'rgba(253, 230, 138, 0.60)');
-    aGrad.addColorStop(1.0, 'rgba(250, 204, 21, 0.15)');
+    aGrad.addColorStop(0.0, 'rgba(148, 142, 128, 0.38)');
+    aGrad.addColorStop(0.55, 'rgba(165, 160, 145, 0.46)');
+    aGrad.addColorStop(0.92, 'rgba(125, 120, 108, 0.28)');
+    aGrad.addColorStop(1.0, 'rgba(88, 84, 75, 0.05)');
     ctx.fillStyle = aGrad;
     ctx.fill('evenodd');
-    ctx.restore();
 
-    // 5. 光環最外側微細光刃
-    ctx.save();
-    ctx.strokeStyle = 'rgba(254, 249, 195, 0.45)';
+    // 5. 光環最外側微細柔化外緣（極細低調微光，不刺眼）
+    ctx.strokeStyle = 'rgba(185, 180, 165, 0.20)';
     ctx.lineWidth = 0.8;
     ctx.beginPath();
-    ctx.ellipse(0, 0, outR, outR * ratio, 0, 0, Math.PI * 2);
+    ctx.arc(0, 0, outR, 0, Math.PI * 2);
     ctx.stroke();
+
     ctx.restore();
   }
 
