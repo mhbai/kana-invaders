@@ -59,6 +59,9 @@ class KanaTypingGame {
     this.stageQueue = []; // 待發射題目隊列（每關剛好放出 50 個字，漏接/過線自動回流）
     this.floatingTexts = []; // 浮動文字提示特效隊列
     this.galaxyOffsetY = 0; // 銀河星雲向下漂移累計位移
+    this.isStageCleared = false; // 街機太空戰場過關狀態
+    this.stageClearStats = null; // 街機戰場過關結算數據
+    this.stageClearClickZones = null; // 街機過關按鈕點擊判定熱區
 
     this.initCanvas();
     this.bindEvents();
@@ -311,18 +314,22 @@ class KanaTypingGame {
       // 忽略特殊功能鍵
       if (e.ctrlKey || e.altKey || e.metaKey) return;
 
+      // 街機太空戰場過關狀態快捷鍵
+      if (this.isStageCleared) {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          this.advanceToNextStage();
+          return;
+        } else if (e.key === 'r' || e.key === 'R') {
+          e.preventDefault();
+          this.start(this.currentStageIndex);
+          return;
+        }
+        return;
+      }
+
       if (!this.isPlaying || this.isPaused) {
         if (e.key === ' ' || e.key === 'Enter') {
-          const clearModal = document.getElementById('stageClearModal');
-          if (clearModal && !clearModal.classList.contains('hidden')) {
-            clearModal.classList.add('hidden');
-            if (this.currentStageIndex < (window.CAMPAIGN_STAGES?.length || 17) - 1) {
-              this.start(this.currentStageIndex + 1);
-            } else {
-              this.start(0);
-            }
-            return;
-          }
           if (!this.isPlaying) this.start(this.currentStageIndex);
         }
         return;
@@ -338,13 +345,47 @@ class KanaTypingGame {
       }
     });
 
-    // 點擊畫布以激活隱藏的文字輸入框（支援手機平板虛擬鍵盤）
+    // 畫布滑鼠懸停效果（過關按鈕 Hover 光標切換）
+    this.canvas.addEventListener('mousemove', (e) => {
+      if (this.isStageCleared && this.stageClearClickZones) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const inNext = this.isPointInRect(mx, my, this.stageClearClickZones.next);
+        const inReplay = this.isPointInRect(mx, my, this.stageClearClickZones.replay);
+        this.canvas.style.cursor = (inNext || inReplay) ? 'pointer' : 'default';
+      } else {
+        this.canvas.style.cursor = 'default';
+      }
+    });
+
+    // 點擊畫布事件（支援街機按鈕點擊 + 手機虛擬鍵盤呼叫）
     const mobileInput = document.getElementById('mobileHiddenInput');
-    if (mobileInput) {
-      this.canvas.addEventListener('click', () => {
+    this.canvas.addEventListener('click', (e) => {
+      window.audioManager.ensureAudioContext();
+
+      if (this.isStageCleared) {
+        const rect = this.canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        if (this.stageClearClickZones) {
+          if (this.isPointInRect(clickX, clickY, this.stageClearClickZones.replay)) {
+            this.start(this.currentStageIndex);
+            return;
+          }
+        }
+        // 點擊「進入下一關」按鈕或點擊畫布任意區域皆可躍遷至下一關
+        this.advanceToNextStage();
+        return;
+      }
+
+      if (mobileInput) {
         mobileInput.focus();
-        window.audioManager.ensureAudioContext();
-      });
+      }
+    });
+
+    if (mobileInput) {
       mobileInput.addEventListener('input', (e) => {
         if (!this.isPlaying || this.isPaused) return;
         const val = mobileInput.value.toLowerCase();
@@ -419,6 +460,10 @@ class KanaTypingGame {
 
     this.isPlaying = true;
     this.isPaused = false;
+    this.isStageCleared = false;
+    this.stageClearStats = null;
+    this.stageClearClickZones = null;
+    if (this.canvas) this.canvas.style.cursor = 'default';
     this.lives = this.maxLives;
     this.combo = 0;
     this.maxCombo = 0;
@@ -782,10 +827,12 @@ class KanaTypingGame {
     document.getElementById('gameOverModal')?.classList.remove('hidden');
   }
 
-  // 關卡突破結算 (Stage Clear)
+  // 關卡突破結算 (Stage Clear - 街機太空戰場嵌入式結算)
   onStageClear() {
     this.isPlaying = false;
-    // 保持 loop 循環以維持宇宙基地星空流動背景
+    this.isStageCleared = true;
+    this.stageClearTime = performance.now();
+    this.targets = []; // 清空殘餘敵人，太空戰場恢復寧靜
 
     window.audioManager.playLevelUp();
 
@@ -812,52 +859,48 @@ class KanaTypingGame {
     }
 
     // 獎勵：通關回血 +1（最多至 maxLives）
+    let healed = false;
     if (this.lives < this.maxLives) {
       this.lives++;
+      healed = true;
     }
 
+    // 計算命中率
+    const acc = this.totalTyped > 0 ? Math.round((this.correctTyped / this.totalTyped) * 100) : 100;
+
+    // 打包戰況數據供畫布太空戰場渲染
+    this.stageClearStats = {
+      stars: stars,
+      healed: healed,
+      score: this.score,
+      defeated: `${this.stageDefeated} / ${this.stageTargetCount}`,
+      combo: `${this.maxCombo}x`,
+      accuracy: `${acc}%`,
+      stageTitle: stage ? stage.name : 'STAGE CLEAR',
+      stageSubtitle: stage ? stage.subtitle : '',
+      isLastStage: this.currentStageIndex >= totalStages - 1
+    };
+
+    // 隱藏舊版對話框 Modal（全面改用街機畫布嵌入式結算）
     const modal = document.getElementById('stageClearModal');
-    if (modal && stage) {
-      const titleEl = document.getElementById('clearStageTitle');
-      const subtitleEl = document.getElementById('clearStageSubtitle');
-      const starsEl = document.getElementById('clearStars');
-      const scoreEl = document.getElementById('clearScore');
-      const defeatedEl = document.getElementById('clearDefeated');
-      const comboEl = document.getElementById('clearCombo');
-      const accEl = document.getElementById('clearAccuracy');
-
-      if (titleEl) titleEl.textContent = stage.name;
-      if (subtitleEl) subtitleEl.textContent = stage.subtitle;
-      if (starsEl) starsEl.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-      if (scoreEl) scoreEl.textContent = this.score;
-      if (defeatedEl) defeatedEl.textContent = `${this.stageDefeated} / ${this.stageTargetCount}`;
-      if (comboEl) comboEl.textContent = `${this.maxCombo}x`;
-
-      const acc = this.totalTyped > 0 ? Math.round((this.correctTyped / this.totalTyped) * 100) : 100;
-      if (accEl) accEl.textContent = `${acc}%`;
-
-      const nextBtn = document.getElementById('nextStageBtn');
-      if (nextBtn) {
-        if (this.currentStageIndex < totalStages - 1) {
-          nextBtn.innerHTML = '進入下一關 ➔ (Space / Enter)';
-          nextBtn.onclick = () => {
-            modal.classList.add('hidden');
-            this.start(this.currentStageIndex + 1);
-          };
-        } else {
-          nextBtn.innerHTML = '🏆 恭喜破台！全部通關！再玩一次！';
-          nextBtn.onclick = () => {
-            modal.classList.add('hidden');
-            this.start(0);
-          };
-        }
-      }
-
-      modal.classList.remove('hidden');
-    }
+    if (modal) modal.classList.add('hidden');
 
     this.renderStageMap();
     this.updateHUD();
+  }
+
+  // 街機躍遷至下一關
+  advanceToNextStage() {
+    this.isStageCleared = false;
+    this.stageClearStats = null;
+    this.stageClearClickZones = null;
+
+    const totalStages = window.CAMPAIGN_STAGES?.length || 17;
+    if (this.currentStageIndex < totalStages - 1) {
+      this.start(this.currentStageIndex + 1);
+    } else {
+      this.start(0);
+    }
   }
 
   // 渲染左側闖關地圖
@@ -1149,6 +1192,256 @@ class KanaTypingGame {
       this.ctx.fillText(ft.text, ft.x, ft.y);
       this.ctx.restore();
     });
+
+    // 繪製街機太空戰場過關結算面板（嵌入在太空中，星空依然捲動）
+    if (this.isStageCleared && this.stageClearStats) {
+      this.renderArcadeStageClear();
+    }
+
+    this.ctx.restore();
+  }
+
+  // 圓角矩形繪製輔助
+  drawRoundRect(ctx, x, y, w, h, r = 8) {
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+  }
+
+  // 矩形碰撞判定
+  isPointInRect(px, py, rect) {
+    if (!rect) return false;
+    return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
+  }
+
+  // 繪製街機風格太空戰場過關結算面板 (Arcade Battlefield Stage Clear HUD)
+  renderArcadeStageClear() {
+    if (!this.stageClearStats) return;
+    const stats = this.stageClearStats;
+    const time = performance.now() * 0.001;
+    const isMobile = this.width < 540;
+
+    const cardW = Math.min(this.width * 0.92, isMobile ? 380 : 500);
+    const cardH = Math.min(this.height * 0.78, isMobile ? 420 : 380);
+    const cx = this.width / 2;
+    const cy = Math.max(cardH / 2 + 18, Math.min(this.height * 0.44, this.height - cardH / 2 - 40));
+    const left = cx - cardW / 2;
+    const top = cy - cardH / 2;
+
+    this.ctx.save();
+
+    // 1. 半透明科幻座艙玻璃面板底層（可透視後方緩緩流動的深邃星空）
+    this.ctx.shadowColor = '#0284c7';
+    this.ctx.shadowBlur = 24;
+    this.ctx.fillStyle = 'rgba(4, 12, 32, 0.82)';
+    this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+    this.ctx.lineWidth = 1.8;
+    this.drawRoundRect(this.ctx, left, top, cardW, cardH, 18);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // 2. 街機風格轉角科技護角 (Cyber L-Corner Brackets)
+    const bLen = 14;
+    this.ctx.strokeStyle = '#38bdf8';
+    this.ctx.lineWidth = 2.5;
+    // 左上
+    this.ctx.beginPath();
+    this.ctx.moveTo(left - 2, top + bLen);
+    this.ctx.lineTo(left - 2, top - 2);
+    this.ctx.lineTo(left + bLen, top - 2);
+    this.ctx.stroke();
+    // 右上
+    this.ctx.beginPath();
+    this.ctx.moveTo(left + cardW - bLen, top - 2);
+    this.ctx.lineTo(left + cardW + 2, top - 2);
+    this.ctx.lineTo(left + cardW + 2, top + bLen);
+    this.ctx.stroke();
+    // 左下
+    this.ctx.beginPath();
+    this.ctx.moveTo(left - 2, top + cardH - bLen);
+    this.ctx.lineTo(left - 2, top + cardH + 2);
+    this.ctx.lineTo(left + bLen, top + cardH + 2);
+    this.ctx.stroke();
+    // 右下
+    this.ctx.beginPath();
+    this.ctx.moveTo(left + cardW - bLen, top + cardH + 2);
+    this.ctx.lineTo(left + cardW + 2, top + cardH + 2);
+    this.ctx.lineTo(left + cardW + 2, top + cardH - bLen);
+    this.ctx.stroke();
+
+    // 3. 街機霓虹標題：MISSION ACCOMPLISHED / STAGE CLEAR
+    const pulse = 0.85 + Math.sin(time * 4) * 0.15;
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    
+    // 頂部慶祝圖示與字樣
+    let curY = top + (isMobile ? 28 : 34);
+    this.ctx.font = `bold ${isMobile ? 11 : 12}px monospace`;
+    this.ctx.fillStyle = `rgba(56, 189, 248, ${pulse})`;
+    this.ctx.shadowColor = '#38bdf8';
+    this.ctx.shadowBlur = 10;
+    this.ctx.fillText('⚡ MISSION ACCOMPLISHED ⚡', cx, curY);
+
+    curY += (isMobile ? 24 : 28);
+    this.ctx.font = `900 ${isMobile ? 22 : 28}px sans-serif`;
+    this.ctx.fillStyle = '#f8fafc';
+    this.ctx.shadowColor = '#06b6d4';
+    this.ctx.shadowBlur = 16;
+    this.ctx.fillText(stats.stageTitle || 'STAGE CLEAR', cx, curY);
+
+    if (stats.stageSubtitle) {
+      curY += (isMobile ? 18 : 22);
+      this.ctx.font = `500 ${isMobile ? 11 : 13}px sans-serif`;
+      this.ctx.fillStyle = '#94a3b8';
+      this.ctx.shadowBlur = 0;
+      this.ctx.fillText(stats.stageSubtitle, cx, curY);
+    }
+
+    // 4. 星級評定 ⭐⭐⭐
+    curY += (isMobile ? 26 : 30);
+    this.ctx.font = `${isMobile ? 26 : 32}px sans-serif`;
+    this.ctx.shadowColor = '#eab308';
+    this.ctx.shadowBlur = 12;
+    const starStr = '⭐'.repeat(stats.stars) + '☆'.repeat(3 - stats.stars);
+    this.ctx.fillText(starStr, cx, curY);
+
+    // 5. 防護回血獎勵標章
+    curY += (isMobile ? 22 : 25);
+    this.ctx.font = `bold ${isMobile ? 10 : 11}px sans-serif`;
+    this.ctx.shadowBlur = 0;
+    const healText = stats.healed ? '🛡️ 基地防衛成功 · 生命防護 +1 ❤️' : '🛡️ 基地防衛成功 · 完美守護';
+    const healW = this.ctx.measureText(healText).width + 20;
+    this.ctx.fillStyle = 'rgba(244, 63, 94, 0.16)';
+    this.ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+    this.ctx.lineWidth = 1;
+    this.drawRoundRect(this.ctx, cx - healW / 2, curY - 10, healW, 20, 10);
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.fillStyle = '#fda4af';
+    this.ctx.fillText(healText, cx, curY);
+
+    // 6. 嵌入式數據看板（4 大指標：目前總分、關卡擊破、最大連擊、本關命中率）
+    curY += (isMobile ? 20 : 22);
+    const statItems = [
+      { label: '目前總分', value: `${stats.score}`, color: '#38bdf8' },
+      { label: '關卡擊破', value: `${stats.defeated}`, color: '#c084fc' },
+      { label: '最大連擊', value: `${stats.combo}`, color: '#fbbf24' },
+      { label: '本關命中率', value: `${stats.accuracy}`, color: '#34d399' }
+    ];
+
+    const boxGap = isMobile ? 6 : 10;
+    const boxH = isMobile ? 46 : 52;
+    const padX = isMobile ? 16 : 24;
+    const availableW = cardW - padX * 2;
+
+    if (cardW >= 420 && !isMobile) {
+      // 4 欄單排配置 (桌面寬版)
+      const colW = (availableW - boxGap * 3) / 4;
+      let startX = left + padX;
+      for (let i = 0; i < 4; i++) {
+        const item = statItems[i];
+        const bx = startX + i * (colW + boxGap);
+        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+        this.ctx.strokeStyle = 'rgba(51, 65, 85, 0.7)';
+        this.ctx.lineWidth = 1;
+        this.drawRoundRect(this.ctx, bx, curY, colW, boxH, 8);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.font = '10px sans-serif';
+        this.ctx.fillStyle = '#94a3b8';
+        this.ctx.fillText(item.label, bx + colW / 2, curY + 14);
+
+        this.ctx.font = 'bold 16px monospace';
+        this.ctx.fillStyle = item.color;
+        this.ctx.fillText(item.value, bx + colW / 2, curY + 34);
+      }
+      curY += boxH + 16;
+    } else {
+      // 2x2 雙排配置 (手機或狹窄寬度)
+      const colW = (availableW - boxGap) / 2;
+      for (let i = 0; i < 4; i++) {
+        const item = statItems[i];
+        const row = Math.floor(i / 2);
+        const col = i % 2;
+        const bx = left + padX + col * (colW + boxGap);
+        const by = curY + row * (boxH + 6);
+
+        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+        this.ctx.strokeStyle = 'rgba(51, 65, 85, 0.7)';
+        this.ctx.lineWidth = 1;
+        this.drawRoundRect(this.ctx, bx, by, colW, boxH, 8);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.font = '9px sans-serif';
+        this.ctx.fillStyle = '#94a3b8';
+        this.ctx.fillText(item.label, bx + colW / 2, by + 13);
+
+        this.ctx.font = 'bold 15px monospace';
+        this.ctx.fillStyle = item.color;
+        this.ctx.fillText(item.value, bx + colW / 2, by + 32);
+      }
+      curY += boxH * 2 + 18;
+    }
+
+    // 7. 街機互動按鈕區：進入下一關 + 重練本關
+    const btnH = isMobile ? 38 : 42;
+    const btnPadX = isMobile ? 16 : 24;
+    const btnTotalW = cardW - btnPadX * 2;
+    const replayW = isMobile ? 80 : 100;
+    const nextW = btnTotalW - replayW - 10;
+
+    const nextX = left + btnPadX;
+    const replayX = nextX + nextW + 10;
+    const btnY = curY;
+
+    // 記錄可點擊區域供點擊判定
+    this.stageClearClickZones = {
+      next: { x: nextX, y: btnY, w: nextW, h: btnH },
+      replay: { x: replayX, y: btnY, w: replayW, h: btnH }
+    };
+
+    // 進入下一關按鈕（漸層發光按鈕）
+    const nextGrad = this.ctx.createLinearGradient(nextX, btnY, nextX + nextW, btnY + btnH);
+    nextGrad.addColorStop(0, '#06b6d4');
+    nextGrad.addColorStop(1, '#2563eb');
+    this.ctx.fillStyle = nextGrad;
+    this.ctx.shadowColor = '#06b6d4';
+    this.ctx.shadowBlur = 12;
+    this.drawRoundRect(this.ctx, nextX, btnY, nextW, btnH, 10);
+    this.ctx.fill();
+    this.ctx.shadowBlur = 0;
+
+    this.ctx.font = `bold ${isMobile ? 12 : 14}px sans-serif`;
+    this.ctx.fillStyle = '#ffffff';
+    const nextText = stats.isLastStage ? '🏆 全部通關！再玩一次 ➔' : '進入下一關 ➔ (Space / Enter)';
+    this.ctx.fillText(nextText, nextX + nextW / 2, btnY + btnH / 2);
+
+    // 重練本關按鈕（低調暗色）
+    this.ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+    this.ctx.strokeStyle = 'rgba(71, 85, 105, 0.8)';
+    this.ctx.lineWidth = 1;
+    this.drawRoundRect(this.ctx, replayX, btnY, replayW, btnH, 10);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    this.ctx.font = `bold ${isMobile ? 11 : 12}px sans-serif`;
+    this.ctx.fillStyle = '#cbd5e1';
+    this.ctx.fillText('重練 🔄 (R)', replayX + replayW / 2, btnY + btnH / 2);
 
     this.ctx.restore();
   }
@@ -1679,9 +1972,22 @@ class KanaTypingGame {
     if (this.isPlaying && !this.isPaused) {
       this.update(deltaTime);
     } else {
-      // 待機、暫停或結算狀態下，維持宇宙基地背景多層次視差星空緩慢航行（Ambient Drift）
-      this.updateStars(0);
+      // 待機、暫停或過關結算狀態下，維持宇宙基地背景多層次視差星空航行（Ambient Drift）
+      // 過關時星空依然平穩或以巡航速度捲動，沒有任何敵人出現
+      const cruiseProgress = this.isStageCleared ? 0.35 : 0;
+      this.updateStars(cruiseProgress);
       this.updateShootingStar();
+
+      // 更新過關時尚未消失的剩餘爆炸粒子
+      if (this.particles && this.particles.length > 0) {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= p.decay;
+          if (p.life <= 0) this.particles.splice(i, 1);
+        }
+      }
     }
     this.render();
 
