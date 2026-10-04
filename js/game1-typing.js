@@ -78,35 +78,16 @@ class KanaTypingGame {
       this.width = rect.width;
       this.height = rect.height;
 
-      // 地球大氣層邊界（約 54% 畫面高度，穿入白霧後才顯示拼音）
+      // 地球大氣層邊界（約 54% 畫面高度，進入後顯示拼音提示）
       this.hintLineY = this.height * 0.54;
       this.bottomLineY = this.height - 65;
 
       this.cannon.x = this.width / 2;
       this.cannon.y = this.height - 40;
-
-      this.initAtmosphereMist();
     };
 
     window.addEventListener('resize', resize);
     resize();
-  }
-
-  // 初始化地球大氣層飄移白霧粒子群
-  initAtmosphereMist() {
-    this.atmosphereMist = [];
-    const count = 26;
-    const w = this.width || 800;
-    for (let i = 0; i < count; i++) {
-      this.atmosphereMist.push({
-        x: Math.random() * w,
-        yRel: (Math.random() - 0.25) * 55,
-        radius: 38 + Math.random() * 55,
-        speed: 0.12 + Math.random() * 0.28,
-        alpha: 0.04 + Math.random() * 0.07,
-        pulseOffset: Math.random() * Math.PI * 2
-      });
-    }
   }
 
   bindEvents() {
@@ -829,17 +810,6 @@ class KanaTypingGame {
       }
     }
 
-    // 更新地球大氣層漂移白霧粒子
-    if (this.atmosphereMist) {
-      for (const m of this.atmosphereMist) {
-        m.x += m.speed;
-        if (m.x - m.radius > this.width) {
-          m.x = -m.radius;
-          m.yRel = (Math.random() - 0.25) * 55;
-        }
-      }
-    }
-
     // 更新浮動提示文字
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const ft = this.floatingTexts[i];
@@ -982,123 +952,42 @@ class KanaTypingGame {
     }
   }
 
-  // 繪製「進入地球大氣層的透明白霧感」視覺特效（徹底告別生硬虛線）
+  // 繪製「地球大氣層」(如同太空俯瞰地球大氣層邊緣：淡淡一層藍白漸層，靜態優雅，不喧賓奪主)
   renderEarthAtmosphere() {
     const hintLineY = this.hintLineY || (this.height * 0.54);
-    const time = performance.now() * 0.001;
     this.ctx.save();
 
-    // A. 大氣層底層半透明白霧/深空漸層 (Atmospheric Volume Gradient)
-    // 從大氣層外緣 (hintLineY - 24) 向下延伸至畫面底部，營造大氣層內朦朧白霧與微藍厚重感
-    const atmosGrad = this.ctx.createLinearGradient(0, hintLineY - 24, 0, this.height);
-    atmosGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    atmosGrad.addColorStop(0.06, 'rgba(224, 242, 254, 0.05)');
-    atmosGrad.addColorStop(0.14, 'rgba(255, 255, 255, 0.18)'); // 大氣頂部明亮白霧
-    atmosGrad.addColorStop(0.30, 'rgba(224, 242, 254, 0.11)'); // 對流層白霧
-    atmosGrad.addColorStop(0.60, 'rgba(186, 230, 253, 0.05)');
-    atmosGrad.addColorStop(1.0, 'rgba(56, 189, 248, 0.02)');
+    // 淡淡一層藍白漸層帶（總高度約 38px，平滑自然過渡）
+    // 依據真實地球太空觀測照：太空深黑 ➔ 幽深寶藍 ➔ 鮮亮天藍 ➔ 地平線白藍光暈 ➔ 漸隱
+    const bandTop = hintLineY - 16;
+    const bandHeight = 40;
+    const atmosGrad = this.ctx.createLinearGradient(0, bandTop, 0, bandTop + bandHeight);
+
+    atmosGrad.addColorStop(0.00, 'rgba(0, 20, 80, 0)');        // 頂部太空：完全透明
+    atmosGrad.addColorStop(0.25, 'rgba(2, 132, 199, 0.08)');    // 外大氣層：淡淡寶藍微光
+    atmosGrad.addColorStop(0.48, 'rgba(56, 189, 248, 0.22)');   // 平流層：澄澈天藍
+    atmosGrad.addColorStop(0.58, 'rgba(224, 242, 254, 0.35)');  // 核心地平線：柔和白藍
+    atmosGrad.addColorStop(0.72, 'rgba(56, 189, 248, 0.16)');   // 低空層：淡天藍
+    atmosGrad.addColorStop(0.88, 'rgba(2, 132, 199, 0.05)');    // 漸變餘韻
+    atmosGrad.addColorStop(1.00, 'rgba(0, 0, 0, 0)');          // 柔和融入背景
+
     this.ctx.fillStyle = atmosGrad;
-    this.ctx.fillRect(0, hintLineY - 24, this.width, this.height - (hintLineY - 24));
+    this.ctx.fillRect(0, bandTop, this.width, bandHeight);
 
-    // B. 有機流動白霧波浪（飄渺的大氣雲海邊界）
-    // Wave 1: 飄動的上層柔和白霧
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, hintLineY);
-    for (let x = 0; x <= this.width; x += 12) {
-      const wy = hintLineY + Math.sin(x * 0.014 + time * 0.9) * 4.5 + Math.cos(x * 0.028 - time * 0.6) * 2.5;
-      this.ctx.lineTo(x, wy);
-    }
-    this.ctx.lineTo(this.width, hintLineY + 50);
-    this.ctx.lineTo(0, hintLineY + 50);
-    this.ctx.closePath();
-    const waveGrad1 = this.ctx.createLinearGradient(0, hintLineY - 5, 0, hintLineY + 50);
-    waveGrad1.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
-    waveGrad1.addColorStop(0.5, 'rgba(240, 249, 255, 0.08)');
-    waveGrad1.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    this.ctx.fillStyle = waveGrad1;
-    this.ctx.fill();
-
-    // Wave 2: 第二層交錯緩動深層白霧
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, hintLineY + 4);
-    for (let x = 0; x <= this.width; x += 14) {
-      const wy = hintLineY + 4 + Math.cos(x * 0.010 - time * 0.7) * 5.0 + Math.sin(x * 0.022 + time * 1.1) * 3.0;
-      this.ctx.lineTo(x, wy);
-    }
-    this.ctx.lineTo(this.width, hintLineY + 80);
-    this.ctx.lineTo(0, hintLineY + 80);
-    this.ctx.closePath();
-    const waveGrad2 = this.ctx.createLinearGradient(0, hintLineY, 0, hintLineY + 80);
-    waveGrad2.addColorStop(0, 'rgba(224, 242, 254, 0.12)');
-    waveGrad2.addColorStop(0.6, 'rgba(186, 230, 253, 0.05)');
-    waveGrad2.addColorStop(1, 'rgba(224, 242, 254, 0)');
-    this.ctx.fillStyle = waveGrad2;
-    this.ctx.fill();
-
-    // C. 漂移的柔焦白霧朵（Atmospheric Mist Clouds）
-    if (this.atmosphereMist && this.atmosphereMist.length > 0) {
-      for (const m of this.atmosphereMist) {
-        const pulse = 1.0 + Math.sin(time * 1.5 + m.pulseOffset) * 0.15;
-        const currentRadius = m.radius * pulse;
-        const puffGrad = this.ctx.createRadialGradient(m.x, hintLineY + m.yRel, 0, m.x, hintLineY + m.yRel, currentRadius);
-        puffGrad.addColorStop(0, `rgba(255, 255, 255, ${m.alpha * 1.4})`);
-        puffGrad.addColorStop(0.5, `rgba(224, 242, 254, ${m.alpha * 0.7})`);
-        puffGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        this.ctx.fillStyle = puffGrad;
-        this.ctx.beginPath();
-        this.ctx.arc(m.x, hintLineY + m.yRel, currentRadius, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
-    }
-
-    // D. 地球大氣天際光暈邊界 (Celestial Atmospheric Limb) — 柔和光輝取代生硬虛線
-    // 柔和外光暈 (Outer Atmospheric Halo)
-    this.ctx.shadowColor = 'rgba(224, 242, 254, 0.9)';
-    this.ctx.shadowBlur = 15;
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-    this.ctx.lineWidth = 2.5;
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, hintLineY);
-    this.ctx.lineTo(this.width, hintLineY);
-    this.ctx.stroke();
-
-    // 核心微白明線 (Inner Crisp Core)
-    this.ctx.shadowBlur = 5;
-    this.ctx.shadowColor = 'rgba(255, 255, 255, 1.0)';
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-    this.ctx.lineWidth = 1.2;
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, hintLineY);
-    this.ctx.lineTo(this.width, hintLineY);
-    this.ctx.stroke();
-
-    // E. 精緻大氣邊界膠囊標籤 (Atmosphere Entry HUD Capsule)
-    const labelText = '☁️ 地球大氣層邊界 · 進入白霧顯現拼音 ☁️';
-    this.ctx.font = 'bold 10px monospace';
-    const textW = this.ctx.measureText(labelText).width;
-    const badgeW = textW + 28;
-    const badgeH = 20;
-    const badgeX = this.width / 2 - badgeW / 2;
-    const badgeY = hintLineY - badgeH / 2;
-
-    // 膠囊底框（深空微光透鏡）
-    this.ctx.shadowBlur = 8;
-    this.ctx.shadowColor = 'rgba(186, 230, 253, 0.5)';
-    this.ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    this.ctx.strokeStyle = 'rgba(224, 242, 254, 0.65)';
+    // 核心微弱天際輪廓細線（極細 1px，半透明柔白）
+    this.ctx.strokeStyle = 'rgba(240, 249, 255, 0.28)';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
-    this.ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 10);
-    this.ctx.fill();
+    this.ctx.moveTo(0, hintLineY);
+    this.ctx.lineTo(this.width, hintLineY);
     this.ctx.stroke();
 
-    // 膠囊文字
-    this.ctx.shadowBlur = 4;
-    this.ctx.shadowColor = '#e0f2fe';
-    this.ctx.fillStyle = '#f0f9ff';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(labelText, this.width / 2, hintLineY);
+    // 右側低調字樣（極淺字色，不干擾畫面中央焦點）
+    this.ctx.font = '10px monospace';
+    this.ctx.fillStyle = 'rgba(186, 230, 253, 0.30)';
+    this.ctx.textAlign = 'right';
+    this.ctx.textBaseline = 'bottom';
+    this.ctx.fillText('☁️ 大氣層 (提示顯現)', this.width - 12, hintLineY - 3);
 
     this.ctx.restore();
   }
@@ -1160,12 +1049,12 @@ class KanaTypingGame {
       this.ctx.shadowColor = '#f59e0b';
       this.ctx.shadowBlur = 15;
     } else if (isPastHintLine) {
-      // 穿入地球大氣層白霧區：邊緣泛起柔和白霧天際光暈
-      this.ctx.fillStyle = 'rgba(19, 30, 54, 0.90)';
-      this.ctx.strokeStyle = '#bae6fd';
-      this.ctx.lineWidth = 2;
-      this.ctx.shadowColor = 'rgba(224, 242, 254, 0.85)';
-      this.ctx.shadowBlur = 12;
+      // 穿入地球大氣層：微光淡天藍邊框，柔和不刺眼
+      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      this.ctx.strokeStyle = '#38bdf8';
+      this.ctx.lineWidth = 1.6;
+      this.ctx.shadowColor = 'rgba(56, 189, 248, 0.4)';
+      this.ctx.shadowBlur = 8;
     } else {
       this.ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
       this.ctx.strokeStyle = `hsl(${t.hue}, 80%, 55%)`;
@@ -1175,21 +1064,6 @@ class KanaTypingGame {
     }
     this.ctx.fill();
     this.ctx.stroke();
-
-    // 若穿入地球大氣層，在卡片頂部渲染大氣摩擦白霧微粒
-    if (isPastHintLine) {
-      this.ctx.save();
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-      const mistTime = performance.now() * 0.006;
-      for (let s = 0; s < 3; s++) {
-        const vx = drawX + (t.width * (0.2 + s * 0.3)) + Math.sin(mistTime + s * 2) * 4;
-        const vy = drawY - 3 - Math.abs(Math.cos(mistTime * 0.8 + s * 1.5)) * 6;
-        this.ctx.beginPath();
-        this.ctx.arc(vx, vy, 2.2, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
-      this.ctx.restore();
-    }
 
     // 2. 假名文字渲染
     this.ctx.textAlign = 'center';
