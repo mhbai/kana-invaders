@@ -9,6 +9,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'あ・い・う・え・お ＋ か・き・く・け・こ',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Intercept_Course.mp3', // 依指定：第一關配樂 Intercept_Course
     getPool: () => window.KANA_DATA.filter(k => ['a', 'ka'].includes(k.row) && k.group === 'seion')
   },
   {
@@ -17,6 +18,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'さ・し・す・せ・そ ＋ た・ち・つ・て・と',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Orbit_of_the_Forgotten.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['sa', 'ta'].includes(k.row) && k.group === 'seion')
   },
   {
@@ -25,6 +27,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'な・に・ぬ・ね・の ＋ は・ひ・ふ・へ・ほ',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Orbit_of_the_Forgotten.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['na', 'ha'].includes(k.row) && k.group === 'seion')
   },
   {
@@ -33,6 +36,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'ま〜も・や〜よ・ら〜ろ・わ・を・ん',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Orbit_of_the_Forgotten.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['ma', 'ya', 'ra', 'wa'].includes(k.row) && k.group === 'seion')
   },
   {
@@ -42,6 +46,7 @@ window.CAMPAIGN_STAGES = [
     targetCount: 50,
     speed: 0.95,
     isBoss: true,
+    bgm: 'music/Stellar_Reactor_Breach.mp3', // Boss 戰：恆星反應爐破壞
     getPool: () => window.KANA_DATA.filter(k => k.group === 'seion')
   },
   {
@@ -50,6 +55,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'が行〜ぱ行 ＋ きゃ〜ぴょ 變化音空襲',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Ammonia_Horizon.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['dakuon', 'handakuon', 'yoon'].includes(k.group))
   },
 
@@ -62,6 +68,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'ア・イ・ウ・エ・オ ＋ カ・キ・ク・ケ・コ',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Path_Of_The_Frozen_Crown.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['a', 'ka'].includes(k.row) && k.group === 'seion').map(k => ({
       displayKana: k.katakana,
       subText: k.hiragana,
@@ -76,6 +83,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'サ・シ・ス・セ・ソ ＋ タ・チ・ツ・テ・ト（辨析 シ vs ツ）',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Path_Of_The_Frozen_Crown.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['sa', 'ta'].includes(k.row) && k.group === 'seion').map(k => ({
       displayKana: k.katakana,
       subText: k.hiragana,
@@ -90,6 +98,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'ナ・ニ・ヌ・ネ・ノ ＋ ハ・ヒ・フ・ヘ・ホ',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Path_Of_The_Frozen_Crown.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['na', 'ha'].includes(k.row) && k.group === 'seion').map(k => ({
       displayKana: k.katakana,
       subText: k.hiragana,
@@ -104,6 +113,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'マ〜モ・ヤ〜ヨ・ラ〜ロ・ワ・ヲ・ン（辨析 ソ vs ン）',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Path_Of_The_Frozen_Crown.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['ma', 'ya', 'ra', 'wa'].includes(k.row) && k.group === 'seion').map(k => ({
       displayKana: k.katakana,
       subText: k.hiragana,
@@ -119,6 +129,7 @@ window.CAMPAIGN_STAGES = [
     targetCount: 50,
     speed: 0.95,
     isBoss: true,
+    bgm: 'music/Titan_s_Wake.mp3', // Boss 戰：泰坦之醒
     getPool: () => window.KANA_DATA.filter(k => k.group === 'seion').map(k => ({
       displayKana: k.katakana,
       subText: k.hiragana,
@@ -133,6 +144,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'ガ〜ポ ＋ キャ〜ピョ 片假名變化音空襲',
     targetCount: 50,
     speed: 0.85,
+    bgm: 'music/Gravity_s_Edge.mp3',
     getPool: () => window.KANA_DATA.filter(k => ['dakuon', 'handakuon', 'yoon'].includes(k.group)).map(k => ({
       displayKana: k.katakana,
       subText: k.hiragana,
@@ -151,6 +163,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: '平假名 ↔ 片假名 隨機雙向出擊，考驗神經反射',
     targetCount: 50,
     speed: 0.90,
+    bgm: 'music/Gravity_s_Edge.mp3',
     getPool: () => {
       const hira = window.KANA_DATA.filter(k => k.group === 'seion').map(k => ({
         displayKana: k.hiragana,
@@ -175,6 +188,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'こんにちは、ありがとう、さくら、ほん、くるま...',
     targetCount: 50,
     speed: 0.80,
+    bgm: 'music/Escape_Vector.mp3',
     getPool: () => window.VOCAB_DATA.filter(w => ['問候常用', '自然生活'].includes(w.category)).map(item => ({
       displayKana: item.kana,
       subText: `${item.meaning} [${item.kanji || item.kana}]`,
@@ -189,6 +203,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'ねこ、いぬ、すし、らーめん、りんご、おいしい...',
     targetCount: 50,
     speed: 0.80,
+    bgm: 'music/Escape_Vector.mp3',
     getPool: () => window.VOCAB_DATA.filter(w => ['可愛動物', '美味飲食', '基礎形容詞'].includes(w.category)).map(item => ({
       displayKana: item.kana,
       subText: `${item.meaning} [${item.kanji || item.kana}]`,
@@ -203,6 +218,7 @@ window.CAMPAIGN_STAGES = [
     subtitle: 'コーヒー、テレビ、カメラ、パン、バス、ホテル、トイレ...',
     targetCount: 50,
     speed: 0.80,
+    bgm: 'music/Escape_Vector.mp3',
     getPool: () => window.VOCAB_DATA.filter(w => w.category === '片假名外來語').map(item => ({
       displayKana: item.kana,
       subText: `${item.meaning} [外來語]`,
@@ -218,6 +234,7 @@ window.CAMPAIGN_STAGES = [
     targetCount: 50,
     speed: 0.95,
     isBoss: true,
+    bgm: 'music/Where_Starlight_Ends.mp3', // 終極 Final Boss 戰：星光終點
     getPool: () => {
       const hira = window.KANA_DATA.map(k => ({
         displayKana: k.hiragana,

@@ -1,4 +1,18 @@
-// 音效與日語語音引擎 (Web Audio API + Web Speech API)
+// 音效與日語語音引擎 (Web Audio API + Web Speech API + HTML5 Audio BGM)
+const BGM_TRACKS = {
+  menu: { path: 'music/Departure_Window.mp3', title: 'Departure Window', desc: '選單／整備航站' },
+  'music/Departure_Window.mp3': { title: 'Departure Window', desc: '選單／整備航站' },
+  'music/Intercept_Course.mp3': { title: 'Intercept Course', desc: '第 1 關・大氣層攔截航道' },
+  'music/Orbit_of_the_Forgotten.mp3': { title: 'Orbit of the Forgotten', desc: '第 2~4 關・遺忘深空軌道' },
+  'music/Stellar_Reactor_Breach.mp3': { title: 'Stellar Reactor Breach', desc: '第 5 關 Boss・反應爐總攻' },
+  'music/Ammonia_Horizon.mp3': { title: 'Ammonia Horizon', desc: '第 6 關・氨氣地平線濁音航線' },
+  'music/Path_Of_The_Frozen_Crown.mp3': { title: 'Path Of The Frozen Crown', desc: '第 7~10 關・冰冠前哨片假名' },
+  'music/Titan_s_Wake.mp3': { title: "Titan's Wake", desc: '第 11 關 Boss・泰坦巨艦降臨' },
+  'music/Gravity_s_Edge.mp3': { title: "Gravity's Edge", desc: '第 12~13 關・重力邊緣平片對決' },
+  'music/Escape_Vector.mp3': { title: 'Escape Vector', desc: '第 14~16 關・脫離向量生活實戰' },
+  'music/Where_Starlight_Ends.mp3': { title: 'Where Starlight Ends', desc: '第 17 關 Final Boss・星光終點大決戰' }
+};
+
 class AudioManager {
   constructor() {
     this.audioCtx = null;
@@ -7,10 +21,60 @@ class AudioManager {
     this.volume = 0.6;
     this.japaneseVoice = null;
 
+    // === 背景音樂 (BGM) 系統 ===
+    const savedBgmEnabled = localStorage.getItem('kana_defense_bgm_enabled');
+    this.bgmEnabled = savedBgmEnabled !== null ? savedBgmEnabled === 'true' : true;
+    
+    const savedBgmVolume = localStorage.getItem('kana_defense_bgm_volume');
+    this.bgmVolume = savedBgmVolume !== null ? parseFloat(savedBgmVolume) : 0.5;
+
+    // 雙播放器平滑交叉淡入淡出 (Crossfade)
+    this.bgmPlayerA = new Audio();
+    this.bgmPlayerB = new Audio();
+    this.bgmPlayerA.loop = true;
+    this.bgmPlayerB.loop = true;
+    this.bgmPlayerA.preload = 'auto';
+    this.bgmPlayerB.preload = 'auto';
+
+    this.activePlayerId = 'A'; // 'A' 或 'B'
+    this.currentBgmPath = null;
+    this.pendingBgmPath = null;
+    this.fadeTimer = null;
+    this.isDucked = false;
+    this.duckFactor = 1.0;
+    this.hasUserInteracted = false;
+
     this.initSpeech();
+    this.initAutoplayUnlock();
   }
 
-  // 確保 AudioContext 在使用者首次互動後啟用（瀏覽器安全規範）
+  // 註冊使用者首次互動監聽（滿足瀏覽器 Audio Autoplay 安全規範）
+  initAutoplayUnlock() {
+    const unlockHandler = () => {
+      this.hasUserInteracted = true;
+      this.ensureAudioContext();
+
+      // 若有先前受限於 Autoplay 規範未播放的 BGM，立即播放
+      if (this.pendingBgmPath && this.bgmEnabled) {
+        const path = this.pendingBgmPath;
+        this.pendingBgmPath = null;
+        this.playBGM(path);
+      } else if (!this.currentBgmPath && this.bgmEnabled) {
+        // 預設播選單配樂 Departure_Window.mp3
+        this.playMenuBGM();
+      }
+
+      window.removeEventListener('pointerdown', unlockHandler);
+      window.removeEventListener('keydown', unlockHandler);
+      window.removeEventListener('touchstart', unlockHandler);
+    };
+
+    window.addEventListener('pointerdown', unlockHandler, { passive: true });
+    window.addEventListener('keydown', unlockHandler, { passive: true });
+    window.addEventListener('touchstart', unlockHandler, { passive: true });
+  }
+
+  // 確保 AudioContext 在使用者互動後喚醒
   ensureAudioContext() {
     if (!this.audioCtx) {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -19,7 +83,7 @@ class AudioManager {
       }
     }
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
+      this.audioCtx.resume().catch(() => {});
     }
   }
 
@@ -46,7 +110,7 @@ class AudioManager {
       window.speechSynthesis.cancel(); // 避免堆積延遲
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ja-JP';
-      utterance.rate = 0.95; // 稍微放慢一點點，初學者聽得更清楚
+      utterance.rate = 0.95; // 稍微放慢，初學者聽得更清楚
       utterance.pitch = 1.05;
       utterance.volume = this.volume;
       if (this.japaneseVoice) {
@@ -55,6 +119,271 @@ class AudioManager {
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.warn('Speech synthesis error:', e);
+    }
+  }
+
+  // ==========================================
+  // === 背景音樂 (BGM) 控制核心 ===
+  // ==========================================
+
+  // 取得目前啟用的 Audio 元素
+  getActivePlayer() {
+    return this.activePlayerId === 'A' ? this.bgmPlayerA : this.bgmPlayerB;
+  }
+
+  // 取得備用的 Audio 元素
+  getStandbyPlayer() {
+    return this.activePlayerId === 'A' ? this.bgmPlayerB : this.bgmPlayerA;
+  }
+
+  // 計算目前實際應有的 BGM 增益
+  getEffectiveBgmVolume() {
+    if (!this.bgmEnabled) return 0;
+    const base = Math.max(0, Math.min(1, this.bgmVolume));
+    return base * (this.isDucked ? this.duckFactor : 1.0);
+  }
+
+  // 播放指定 BGM 軌跡（支援平滑交叉淡入淡出 Crossfade）
+  playBGM(trackPath, loop = true) {
+    if (!trackPath) return;
+
+    // 若同一首曲目已在播放中，無須重新觸發淡入，只需確保播放中
+    if (this.currentBgmPath === trackPath) {
+      const cur = this.getActivePlayer();
+      if (this.bgmEnabled && cur.paused && cur.src) {
+        cur.play().catch(() => { this.pendingBgmPath = trackPath; });
+      }
+      this.updateBgmUI();
+      return;
+    }
+
+    const curPlayer = this.getActivePlayer();
+    const nextPlayer = this.getStandbyPlayer();
+
+    // 更新目標曲目路徑
+    this.currentBgmPath = trackPath;
+    this.isDucked = false;
+    this.duckFactor = 1.0;
+
+    nextPlayer.src = trackPath;
+    nextPlayer.loop = loop;
+    nextPlayer.volume = 0;
+
+    // 若使用者尚未點擊過網頁，暫存待觸發
+    if (!this.hasUserInteracted) {
+      this.pendingBgmPath = trackPath;
+      this.updateBgmUI();
+      // 嘗試播放一次，如果瀏覽器許可（例如已累積互動）便直接開播
+      const p = nextPlayer.play();
+      if (p !== undefined) {
+        p.then(() => {
+          this.hasUserInteracted = true;
+          this.executeCrossfade(curPlayer, nextPlayer);
+        }).catch(() => {
+          // 被阻擋，等待使用者首次手勢解鎖
+        });
+      }
+      return;
+    }
+
+    if (!this.bgmEnabled) {
+      this.activePlayerId = this.activePlayerId === 'A' ? 'B' : 'A';
+      this.updateBgmUI();
+      return;
+    }
+
+    // 執行平滑交叉轉移
+    const playPromise = nextPlayer.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        this.executeCrossfade(curPlayer, nextPlayer);
+      }).catch(err => {
+        console.warn('BGM Play blocked or failed:', err);
+        this.pendingBgmPath = trackPath;
+      });
+    }
+
+    this.updateBgmUI();
+  }
+
+  // 平滑淡入淡出轉移
+  executeCrossfade(fromPlayer, toPlayer, durationMs = 600) {
+    if (this.fadeTimer) {
+      clearInterval(this.fadeTimer);
+      this.fadeTimer = null;
+    }
+
+    const startTime = performance.now();
+    const targetVol = this.getEffectiveBgmVolume();
+    const startFromVol = fromPlayer.volume;
+
+    this.fadeTimer = setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(1, elapsed / durationMs);
+
+      // 上一首淡出，新一首淡入
+      toPlayer.volume = Math.max(0, Math.min(1, targetVol * progress));
+      fromPlayer.volume = Math.max(0, Math.min(1, startFromVol * (1 - progress)));
+
+      if (progress >= 1) {
+        clearInterval(this.fadeTimer);
+        this.fadeTimer = null;
+        fromPlayer.pause();
+        fromPlayer.currentTime = 0;
+        fromPlayer.volume = 0;
+        toPlayer.volume = targetVol;
+        // 切換主要指針
+        this.activePlayerId = this.activePlayerId === 'A' ? 'B' : 'A';
+      }
+    }, 40);
+  }
+
+  // 播放選單／整備航站配樂 (Departure_Window.mp3)
+  playMenuBGM() {
+    this.playBGM('music/Departure_Window.mp3');
+  }
+
+  // 根據關卡資料播放對應配樂
+  playStageBGM(stageIndex = 0) {
+    const stages = window.CAMPAIGN_STAGES;
+    let track = 'music/Intercept_Course.mp3';
+    if (stages && stages[stageIndex] && stages[stageIndex].bgm) {
+      track = stages[stageIndex].bgm;
+    }
+    this.playBGM(track);
+  }
+
+  // 暫停 BGM
+  pauseBGM() {
+    const cur = this.getActivePlayer();
+    if (cur) cur.pause();
+  }
+
+  // 恢復 BGM
+  resumeBGM() {
+    if (!this.bgmEnabled) return;
+    const cur = this.getActivePlayer();
+    if (cur && cur.src) {
+      cur.volume = this.getEffectiveBgmVolume();
+      cur.play().catch(() => {});
+    } else if (this.currentBgmPath) {
+      this.playBGM(this.currentBgmPath);
+    }
+  }
+
+  // 暫時壓低音量（如暫停選單、過關歡呼或爆炸時）
+  duckBGM(duckFactor = 0.35) {
+    this.isDucked = true;
+    this.duckFactor = duckFactor;
+    const cur = this.getActivePlayer();
+    if (cur && !cur.paused) {
+      cur.volume = this.getEffectiveBgmVolume();
+    }
+  }
+
+  // 恢復正常音量
+  restoreBGM() {
+    this.isDucked = false;
+    this.duckFactor = 1.0;
+    const cur = this.getActivePlayer();
+    if (cur && !cur.paused) {
+      cur.volume = this.getEffectiveBgmVolume();
+    }
+  }
+
+  // 停止 BGM
+  stopBGM() {
+    const cur = this.getActivePlayer();
+    if (cur) {
+      cur.pause();
+      cur.currentTime = 0;
+    }
+    this.currentBgmPath = null;
+    this.pendingBgmPath = null;
+    this.updateBgmUI();
+  }
+
+  // 設定 BGM 啟用開關
+  setBGMEnabled(enabled) {
+    this.bgmEnabled = enabled;
+    localStorage.setItem('kana_defense_bgm_enabled', enabled.toString());
+    if (enabled) {
+      if (this.currentBgmPath) {
+        this.resumeBGM();
+      } else {
+        this.playMenuBGM();
+      }
+    } else {
+      this.pauseBGM();
+    }
+    this.updateBgmUI();
+  }
+
+  // 切換 BGM 靜音開關
+  toggleBGM() {
+    this.setBGMEnabled(!this.bgmEnabled);
+  }
+
+  // 設定 BGM 音量 (0.0 ~ 1.0)
+  setBGMVolume(vol) {
+    this.bgmVolume = Math.max(0, Math.min(1, vol));
+    localStorage.setItem('kana_defense_bgm_volume', this.bgmVolume.toString());
+    const cur = this.getActivePlayer();
+    if (cur) {
+      cur.volume = this.getEffectiveBgmVolume();
+    }
+    this.updateBgmUI();
+  }
+
+  // 取得曲目資訊
+  getCurrentTrackInfo() {
+    if (!this.currentBgmPath) {
+      return { title: 'Departure Window', desc: '選單／整備航站', path: 'music/Departure_Window.mp3' };
+    }
+    return BGM_TRACKS[this.currentBgmPath] || {
+      title: this.currentBgmPath.split('/').pop().replace('.mp3', '').replace(/_/g, ' '),
+      desc: '太空航行配樂',
+      path: this.currentBgmPath
+    };
+  }
+
+  // 同步更新 DOM UI 上的 BGM 狀態與歌曲標題
+  updateBgmUI() {
+    const info = this.getCurrentTrackInfo();
+    const titleEl = document.getElementById('bgmTrackTitle');
+    if (titleEl) {
+      titleEl.textContent = this.bgmEnabled ? info.title : '(BGM 已靜音)';
+    }
+
+    const toggleCheckbox = document.getElementById('bgmToggle');
+    if (toggleCheckbox && toggleCheckbox.checked !== this.bgmEnabled) {
+      toggleCheckbox.checked = this.bgmEnabled;
+    }
+
+    const volumeSlider = document.getElementById('bgmVolumeSlider');
+    if (volumeSlider) {
+      volumeSlider.value = Math.round(this.bgmVolume * 100);
+    }
+
+    const volumeText = document.getElementById('bgmVolumeVal');
+    if (volumeText) {
+      volumeText.textContent = `${Math.round(this.bgmVolume * 100)}%`;
+    }
+
+    const quickBgmBtn = document.getElementById('quickBgmBtn');
+    if (quickBgmBtn) {
+      const iconSpan = quickBgmBtn.querySelector('.bgm-icon') || quickBgmBtn;
+      if (quickBgmBtn.querySelector('.bgm-icon')) {
+        quickBgmBtn.querySelector('.bgm-icon').textContent = this.bgmEnabled ? '🎵' : '🔇';
+      } else {
+        quickBgmBtn.innerHTML = this.bgmEnabled ? '🎵' : '🔇';
+      }
+      quickBgmBtn.title = this.bgmEnabled ? `BGM: ${info.title} (點擊靜音)` : 'BGM: 已靜音 (點擊開啟)';
+    }
+
+    const quickBgmTitle = document.getElementById('quickBgmTitle');
+    if (quickBgmTitle) {
+      quickBgmTitle.textContent = this.bgmEnabled ? info.title : '已靜音';
     }
   }
 

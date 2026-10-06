@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>👾 Kana Invaders (假名特攻隊) v1.4.0 - 日語闖關防衛戰</title>
+  <title>👾 Kana Invaders (假名特攻隊) v1.4.1 - 日語闖關防衛戰</title>
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
   <!-- Tailwind CSS CDN -->
@@ -19,7 +19,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=1.4.0">
+  <link rel="stylesheet" href="css/style.css?v=1.4.1">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
@@ -34,30 +34,38 @@
           <h1 class="text-base font-bold tracking-wide text-white flex items-center gap-2">
             Kana Invaders
             <span class="text-xs text-slate-300 font-medium">假名特攻隊</span>
-            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.4.0</span>
+            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.4.1</span>
           </h1>
         </div>
       </div>
 
-      <!-- 4 款遊戲模式導覽 -->
-      <nav class="flex items-center gap-1.5 overflow-x-auto py-0.5">
-        <button class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-sm shadow-cyan-500/30 flex items-center gap-1.5 border border-cyan-400/30">
-          <span>🚀</span> 假名打字擊墜 (闖關模式)
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+      <div class="flex items-center gap-2">
+        <!-- 4 款遊戲模式導覽 -->
+        <nav class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+          <button class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-sm shadow-cyan-500/30 flex items-center gap-1.5 border border-cyan-400/30">
+            <span>🚀</span> 假名打字擊墜 (闖關模式)
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          </button>
+          <button onclick="alert('【階段二】平片假名對決・翻牌記憶卡 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
+            <span>🎴</span> 翻牌記憶
+            <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
+          </button>
+          <button onclick="alert('【階段三】假名單字 Wordle 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
+            <span>🟩</span> 假名 Wordle
+            <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
+          </button>
+          <button onclick="alert('【階段四】勇者假名地下城 RPG 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
+            <span>⚔️</span> 地下城 RPG
+            <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
+          </button>
+        </nav>
+
+        <!-- BGM 快捷切換與曲目顯示 -->
+        <button id="quickBgmBtn" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition flex items-center gap-1.5 shadow-sm ml-1" title="背景音樂開關 (BGM)">
+          <span class="bgm-icon">🎵</span>
+          <span id="quickBgmTitle" class="hidden sm:inline text-[11px] font-mono text-cyan-300 max-w-[130px] truncate">Departure Window</span>
         </button>
-        <button onclick="alert('【階段二】平片假名對決・翻牌記憶卡 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
-          <span>🎴</span> 翻牌記憶
-          <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
-        </button>
-        <button onclick="alert('【階段三】假名單字 Wordle 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
-          <span>🟩</span> 假名 Wordle
-          <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
-        </button>
-        <button onclick="alert('【階段四】勇者假名地下城 RPG 目前正在規劃開發中，敬請期待！')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition flex items-center gap-1">
-          <span>⚔️</span> 地下城 RPG
-          <span class="text-[10px] px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">TODO</span>
-        </button>
-      </nav>
+      </div>
     </div>
   </header>
 
@@ -170,9 +178,14 @@
           <div class="bg-slate-950/50 backdrop-blur-md border border-slate-700/35 rounded-2xl max-w-sm w-full p-6 shadow-2xl flex flex-col items-center">
             <h3 class="text-2xl font-black text-amber-400 mb-2">遊戲已暫停</h3>
             <p class="text-xs sm:text-sm text-slate-300 mb-5">按 ESC 或點擊下方按鈕繼續</p>
-            <button id="resumeGameBtn" class="px-7 py-2.5 rounded-xl bg-cyan-600/85 hover:bg-cyan-500 text-white font-semibold text-sm border border-cyan-400/25 transition">
-              繼續遊戲
-            </button>
+            <div class="flex flex-col gap-2.5 w-full max-w-xs">
+              <button id="resumeGameBtn" class="w-full py-2.5 rounded-xl bg-cyan-600/85 hover:bg-cyan-500 text-white font-semibold text-sm border border-cyan-400/25 transition">
+                繼續遊戲
+              </button>
+              <button id="pauseMenuBtn" class="w-full py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-semibold text-sm border border-slate-700/50 transition">
+                返回整備選單 🚀
+              </button>
+            </div>
           </div>
         </div>
 
@@ -221,9 +234,12 @@
             </div>
 
             <!-- 操作按鈕 -->
-            <div class="flex gap-2.5">
+            <div class="flex gap-2">
               <button id="restartGameBtn" class="flex-1 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-rose-500/85 to-amber-600/85 hover:from-rose-500 hover:to-amber-600 text-white font-bold text-xs sm:text-sm border border-rose-400/25 shadow-md shadow-rose-500/20 transition">
                 重新挑戰本關 🔄
+              </button>
+              <button id="gameOverMenuBtn" class="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-cyan-900/40 hover:bg-cyan-800/60 text-cyan-200 text-xs sm:text-sm font-semibold transition border border-cyan-500/30 flex items-center justify-center gap-1.5">
+                整備選單 🚀
               </button>
               <button onclick="document.getElementById('kanaCheatModal').classList.remove('hidden')" class="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-slate-900/50 hover:bg-slate-800 text-slate-200 text-xs sm:text-sm font-semibold transition border border-slate-700/35">
                 查閱五十音 📖
@@ -290,7 +306,27 @@
 
       <!-- 音訊設定 -->
       <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-md space-y-2">
-        <div class="text-[11px] font-semibold text-slate-300 mb-1">🔊 音訊回饋設定</div>
+        <div class="text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+          <span class="flex items-center gap-1.5"><span>🔊</span> 音訊回饋設定</span>
+        </div>
+        <label class="flex items-center justify-between text-xs cursor-pointer p-1.5 rounded hover:bg-slate-800/60 transition">
+          <span class="text-slate-300 flex items-center gap-1.5">
+            <span>🎵</span> 太空背景音樂 (BGM)
+          </span>
+          <input type="checkbox" id="bgmToggle" checked class="rounded accent-cyan-500 w-4 h-4">
+        </label>
+        <div class="px-1.5 pt-0.5 pb-1">
+          <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+            <span>BGM 音量</span>
+            <span id="bgmVolumeVal" class="font-mono text-cyan-400">50%</span>
+          </div>
+          <input type="range" id="bgmVolumeSlider" min="0" max="100" value="50" class="w-full accent-cyan-500 h-1.5 bg-slate-700 rounded-lg cursor-pointer">
+        </div>
+        <div class="text-[10px] text-cyan-300/90 bg-slate-800/70 px-2 py-1.5 rounded-lg border border-slate-700/60 flex items-center gap-1.5 truncate">
+          <span class="animate-pulse">🎶</span>
+          <span id="bgmTrackTitle" class="truncate font-mono">Departure Window</span>
+        </div>
+        <div class="border-t border-slate-800/80 my-1"></div>
         <label class="flex items-center justify-between text-xs cursor-pointer p-1.5 rounded hover:bg-slate-800/60 transition">
           <span class="text-slate-300">街機打擊音效</span>
           <input type="checkbox" id="sfxToggle" checked class="rounded accent-cyan-500 w-4 h-4">
@@ -350,14 +386,14 @@
   </div>
 
   <!-- 腳本引入（附帶版本防快取） -->
-  <script src="js/data/kana.js?v=1.4.0"></script>
-  <script src="js/data/words.js?v=1.4.0"></script>
-  <script src="js/data/stages.js?v=1.4.0"></script>
-  <script src="js/audio.js?v=1.4.0"></script>
-  <script src="js/game1-typing.js?v=1.4.0"></script>
+  <script src="js/data/kana.js?v=1.4.1"></script>
+  <script src="js/data/words.js?v=1.4.1"></script>
+  <script src="js/data/stages.js?v=1.4.1"></script>
+  <script src="js/audio.js?v=1.4.1"></script>
+  <script src="js/game1-typing.js?v=1.4.1"></script>
 
   <script>
-    console.log('%c👾 Kana Invaders (假名特攻隊) v1.4.0 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
+    console.log('%c👾 Kana Invaders (假名特攻隊) v1.4.1 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
 
     // 遊戲主流程與 UI 互動事件綁定
     window.addEventListener('DOMContentLoaded', () => {
@@ -385,6 +421,14 @@
         game.togglePause();
       });
 
+      // 返回選單／整備航站
+      document.getElementById('pauseMenuBtn')?.addEventListener('click', () => {
+        game.returnToMenu();
+      });
+      document.getElementById('gameOverMenuBtn')?.addEventListener('click', () => {
+        game.returnToMenu();
+      });
+
       // 難度選擇
       const diffSelect = document.getElementById('difficultySelect');
       diffSelect.addEventListener('change', (e) => {
@@ -401,6 +445,26 @@
       voiceToggle.addEventListener('change', (e) => {
         window.audioManager.voiceEnabled = e.target.checked;
       });
+
+      // 背景音樂 (BGM) 控制綁定
+      const bgmToggle = document.getElementById('bgmToggle');
+      const bgmVolumeSlider = document.getElementById('bgmVolumeSlider');
+      const quickBgmBtn = document.getElementById('quickBgmBtn');
+
+      bgmToggle?.addEventListener('change', (e) => {
+        window.audioManager.setBGMEnabled(e.target.checked);
+      });
+
+      bgmVolumeSlider?.addEventListener('input', (e) => {
+        window.audioManager.setBGMVolume(parseInt(e.target.value, 10) / 100);
+      });
+
+      quickBgmBtn?.addEventListener('click', () => {
+        window.audioManager.toggleBGM();
+      });
+
+      // 初始同步音訊 UI 狀態
+      window.audioManager.updateBgmUI();
 
       // 渲染五十音速查表 Modal 內容
       const kanaCheatContent = document.getElementById('kanaCheatContent');

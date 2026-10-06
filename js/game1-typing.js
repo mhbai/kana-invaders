@@ -70,6 +70,9 @@ class KanaTypingGame {
     // 啟動宇宙基地常態視差星空巡航循環（Ambient Space Station Cruise）
     this.lastTime = performance.now();
     this.loop();
+
+    // 啟動選單／整備航站背景音樂 (Departure_Window.mp3)
+    window.audioManager.playMenuBGM();
   }
 
   initCanvas() {
@@ -500,6 +503,10 @@ class KanaTypingGame {
 
     const stage = this.getCurrentStage();
 
+    // 切換至當前關卡所屬背景音樂（第 1 關為 Intercept_Course.mp3，其餘關卡各有專屬主題曲）
+    window.audioManager.playStageBGM(this.currentStageIndex);
+    window.audioManager.restoreBGM();
+
     this.isPlaying = true;
     this.isPaused = false;
     this.isStageCleared = false;
@@ -566,10 +573,39 @@ class KanaTypingGame {
     const pauseOverlay = document.getElementById('pauseOverlay');
     if (this.isPaused) {
       pauseOverlay?.classList.remove('hidden');
+      window.audioManager.duckBGM(0.35);
     } else {
       pauseOverlay?.classList.add('hidden');
+      window.audioManager.restoreBGM();
       this.lastTime = performance.now();
     }
+  }
+
+  // 返回選單／整備航站 (Return to Menu)
+  returnToMenu() {
+    this.isPlaying = false;
+    this.isPaused = false;
+    this.isStageCleared = false;
+    this.stageClearStats = null;
+    this.stageClearClickZones = null;
+    if (this.canvas) this.canvas.style.cursor = 'default';
+    this.targets = [];
+    this.lasers = [];
+    this.particles = [];
+    this.lockedTarget = null;
+    this.screenShake = 0;
+    this.dangerFlash = 0;
+
+    document.getElementById('startModal')?.classList.remove('hidden');
+    document.getElementById('gameOverModal')?.classList.add('hidden');
+    document.getElementById('pauseOverlay')?.classList.add('hidden');
+    document.getElementById('stageClearModal')?.classList.add('hidden');
+
+    // 切回選單配樂 Departure_Window.mp3
+    window.audioManager.playMenuBGM();
+    window.audioManager.restoreBGM();
+    this.updateHUD();
+    this.renderStageMap();
   }
 
   // 浮動文字特效輔助
@@ -829,6 +865,7 @@ class KanaTypingGame {
     this.lasers = [];        // 清除殘餘雷射
     this.lockedTarget = null;
     window.audioManager.playGameOver();
+    window.audioManager.duckBGM(0.3);
 
     // 計算準確率
     const accuracy = this.totalTyped > 0 
@@ -886,6 +923,7 @@ class KanaTypingGame {
     this.lockedTarget = null;
 
     window.audioManager.playLevelUp();
+    window.audioManager.duckBGM(0.4);
 
     // 評定星級 (3星: 0失誤, 2星: 1~2失誤, 1星: 3+失誤)
     let stars = 3;
