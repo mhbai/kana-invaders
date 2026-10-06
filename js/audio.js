@@ -16,8 +16,15 @@ const BGM_TRACKS = {
 class AudioManager {
   constructor() {
     this.audioCtx = null;
-    this.sfxEnabled = true;
-    this.voiceEnabled = true;
+
+    // === 音效 (SFX) 開關（記憶使用者上次設定） ===
+    const savedSfxEnabled = localStorage.getItem('kana_defense_sfx_enabled');
+    this.sfxEnabled = savedSfxEnabled !== null ? savedSfxEnabled === 'true' : true;
+
+    // === 真人語音 (Voice) 開關（記憶使用者上次設定） ===
+    const savedVoiceEnabled = localStorage.getItem('kana_defense_voice_enabled');
+    this.voiceEnabled = savedVoiceEnabled !== null ? savedVoiceEnabled === 'true' : true;
+
     this.volume = 0.6;
     this.japaneseVoice = null;
 
@@ -347,17 +354,46 @@ class AudioManager {
     };
   }
 
-  // 同步更新 DOM UI 上的 BGM 狀態與歌曲標題
-  updateBgmUI() {
+  // === 音效 (SFX) 開關與持久化 ===
+  setSFXEnabled(enabled) {
+    this.sfxEnabled = !!enabled;
+    localStorage.setItem('kana_defense_sfx_enabled', this.sfxEnabled.toString());
+    this.updateAudioUI();
+  }
+
+  toggleSFX() {
+    this.setSFXEnabled(!this.sfxEnabled);
+  }
+
+  // === 真人語音 (Voice) 開關與持久化 ===
+  setVoiceEnabled(enabled) {
+    this.voiceEnabled = !!enabled;
+    localStorage.setItem('kana_defense_voice_enabled', this.voiceEnabled.toString());
+    this.updateAudioUI();
+  }
+
+  toggleVoice() {
+    this.setVoiceEnabled(!this.voiceEnabled);
+  }
+
+  // 同步更新 DOM UI 上的所有音訊開關狀態、音量與歌曲標題
+  updateAudioUI() {
     const info = this.getCurrentTrackInfo();
+
+    // 1. 背景音樂 (BGM) UI
     const titleEl = document.getElementById('bgmTrackTitle');
     if (titleEl) {
-      titleEl.textContent = this.bgmEnabled ? info.title : '(BGM 已靜音)';
+      titleEl.textContent = this.bgmEnabled ? info.title : '(音樂已關閉)';
     }
 
-    const toggleCheckbox = document.getElementById('bgmToggle');
-    if (toggleCheckbox && toggleCheckbox.checked !== this.bgmEnabled) {
-      toggleCheckbox.checked = this.bgmEnabled;
+    const bgmToggle = document.getElementById('bgmToggle');
+    if (bgmToggle && bgmToggle.checked !== this.bgmEnabled) {
+      bgmToggle.checked = this.bgmEnabled;
+    }
+
+    const pauseBgmToggle = document.getElementById('pauseBgmToggle');
+    if (pauseBgmToggle && pauseBgmToggle.checked !== this.bgmEnabled) {
+      pauseBgmToggle.checked = this.bgmEnabled;
     }
 
     const volumeSlider = document.getElementById('bgmVolumeSlider');
@@ -378,13 +414,61 @@ class AudioManager {
       } else {
         quickBgmBtn.innerHTML = this.bgmEnabled ? '🎵' : '🔇';
       }
-      quickBgmBtn.title = this.bgmEnabled ? `BGM: ${info.title} (點擊靜音)` : 'BGM: 已靜音 (點擊開啟)';
+      quickBgmBtn.title = this.bgmEnabled ? `音樂: ${info.title} (點擊關閉)` : '音樂: 已關閉 (點擊開啟)';
+      if (this.bgmEnabled) {
+        quickBgmBtn.classList.remove('opacity-50');
+      } else {
+        quickBgmBtn.classList.add('opacity-50');
+      }
     }
 
     const quickBgmTitle = document.getElementById('quickBgmTitle');
     if (quickBgmTitle) {
-      quickBgmTitle.textContent = this.bgmEnabled ? info.title : '已靜音';
+      quickBgmTitle.textContent = this.bgmEnabled ? info.title : '音樂已關閉';
     }
+
+    // 2. 街機音效 (SFX) UI
+    const sfxToggle = document.getElementById('sfxToggle');
+    if (sfxToggle && sfxToggle.checked !== this.sfxEnabled) {
+      sfxToggle.checked = this.sfxEnabled;
+    }
+
+    const pauseSfxToggle = document.getElementById('pauseSfxToggle');
+    if (pauseSfxToggle && pauseSfxToggle.checked !== this.sfxEnabled) {
+      pauseSfxToggle.checked = this.sfxEnabled;
+    }
+
+    const quickSfxBtn = document.getElementById('quickSfxBtn');
+    if (quickSfxBtn) {
+      const sfxIcon = quickSfxBtn.querySelector('.sfx-icon') || quickSfxBtn;
+      if (quickSfxBtn.querySelector('.sfx-icon')) {
+        quickSfxBtn.querySelector('.sfx-icon').textContent = this.sfxEnabled ? '🔊' : '🔈';
+      } else {
+        quickSfxBtn.innerHTML = this.sfxEnabled ? '🔊' : '🔈';
+      }
+      quickSfxBtn.title = this.sfxEnabled ? '音效: 已開啟 (點擊關閉)' : '音效: 已關閉 (點擊開啟)';
+      if (this.sfxEnabled) {
+        quickSfxBtn.classList.remove('opacity-50');
+      } else {
+        quickSfxBtn.classList.add('opacity-50');
+      }
+    }
+
+    const quickSfxTitle = document.getElementById('quickSfxTitle');
+    if (quickSfxTitle) {
+      quickSfxTitle.textContent = this.sfxEnabled ? '音效開' : '音效關';
+    }
+
+    // 3. 真人語音 (Voice) UI
+    const voiceToggle = document.getElementById('voiceToggle');
+    if (voiceToggle && voiceToggle.checked !== this.voiceEnabled) {
+      voiceToggle.checked = this.voiceEnabled;
+    }
+  }
+
+  // 向下相容
+  updateBgmUI() {
+    this.updateAudioUI();
   }
 
   // === 8-Bit / 街機合成音效 (無需下載音檔) ===

@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>👾 Kana Invaders (假名特攻隊) v1.4.1 - 日語闖關防衛戰</title>
+  <title>👾 Kana Invaders (假名特攻隊) v1.4.2 - 日語闖關防衛戰</title>
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
   <!-- Tailwind CSS CDN -->
@@ -19,7 +19,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=1.4.1">
+  <link rel="stylesheet" href="css/style.css?v=1.4.2">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
@@ -34,7 +34,7 @@
           <h1 class="text-base font-bold tracking-wide text-white flex items-center gap-2">
             Kana Invaders
             <span class="text-xs text-slate-300 font-medium">假名特攻隊</span>
-            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.4.1</span>
+            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.4.2</span>
           </h1>
         </div>
       </div>
@@ -60,10 +60,16 @@
           </button>
         </nav>
 
-        <!-- BGM 快捷切換與曲目顯示 -->
+        <!-- 音樂快捷開關 (BGM) -->
         <button id="quickBgmBtn" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition flex items-center gap-1.5 shadow-sm ml-1" title="背景音樂開關 (BGM)">
           <span class="bgm-icon">🎵</span>
-          <span id="quickBgmTitle" class="hidden sm:inline text-[11px] font-mono text-cyan-300 max-w-[130px] truncate">Departure Window</span>
+          <span id="quickBgmTitle" class="hidden sm:inline text-[11px] font-mono text-cyan-300 max-w-[120px] truncate">Departure Window</span>
+        </button>
+
+        <!-- 音效快捷開關 (SFX) -->
+        <button id="quickSfxBtn" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition flex items-center gap-1.5 shadow-sm" title="街機打擊音效開關 (SFX)">
+          <span class="sfx-icon">🔊</span>
+          <span id="quickSfxTitle" class="hidden md:inline text-[11px] font-mono text-amber-300">音效開</span>
         </button>
       </div>
     </div>
@@ -182,7 +188,17 @@
               <button id="resumeGameBtn" class="w-full py-2.5 rounded-xl bg-cyan-600/85 hover:bg-cyan-500 text-white font-semibold text-sm border border-cyan-400/25 transition">
                 繼續遊戲
               </button>
-              <button id="pauseMenuBtn" class="w-full py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-semibold text-sm border border-slate-700/50 transition">
+              <div class="flex items-center justify-center gap-3 py-1">
+                <label class="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700/60 hover:border-cyan-500/50 transition">
+                  <span>🎵 音樂</span>
+                  <input type="checkbox" id="pauseBgmToggle" class="rounded accent-cyan-500 w-3.5 h-3.5">
+                </label>
+                <label class="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700/60 hover:border-cyan-500/50 transition">
+                  <span>🔊 音效</span>
+                  <input type="checkbox" id="pauseSfxToggle" class="rounded accent-cyan-500 w-3.5 h-3.5">
+                </label>
+              </div>
+              <button id="pauseMenuBtn" class="w-full py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700/50 transition">
                 返回整備選單 🚀
               </button>
             </div>
@@ -386,14 +402,14 @@
   </div>
 
   <!-- 腳本引入（附帶版本防快取） -->
-  <script src="js/data/kana.js?v=1.4.1"></script>
-  <script src="js/data/words.js?v=1.4.1"></script>
-  <script src="js/data/stages.js?v=1.4.1"></script>
-  <script src="js/audio.js?v=1.4.1"></script>
-  <script src="js/game1-typing.js?v=1.4.1"></script>
+  <script src="js/data/kana.js?v=1.4.2"></script>
+  <script src="js/data/words.js?v=1.4.2"></script>
+  <script src="js/data/stages.js?v=1.4.2"></script>
+  <script src="js/audio.js?v=1.4.2"></script>
+  <script src="js/game1-typing.js?v=1.4.2"></script>
 
   <script>
-    console.log('%c👾 Kana Invaders (假名特攻隊) v1.4.1 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
+    console.log('%c👾 Kana Invaders (假名特攻隊) v1.4.2 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
 
     // 遊戲主流程與 UI 互動事件綁定
     window.addEventListener('DOMContentLoaded', () => {
@@ -435,23 +451,37 @@
         game.setDifficulty(e.target.value);
       });
 
-      // 音效與語音開關
+      // === 音效 (SFX) 開關事件（記憶使用者上次設定） ===
       const sfxToggle = document.getElementById('sfxToggle');
+      const pauseSfxToggle = document.getElementById('pauseSfxToggle');
+      const quickSfxBtn = document.getElementById('quickSfxBtn');
+
+      sfxToggle?.addEventListener('change', (e) => {
+        window.audioManager.setSFXEnabled(e.target.checked);
+      });
+      pauseSfxToggle?.addEventListener('change', (e) => {
+        window.audioManager.setSFXEnabled(e.target.checked);
+      });
+      quickSfxBtn?.addEventListener('click', () => {
+        window.audioManager.toggleSFX();
+      });
+
+      // === 真人語音 (Voice) 開關事件（記憶使用者上次設定） ===
       const voiceToggle = document.getElementById('voiceToggle');
-
-      sfxToggle.addEventListener('change', (e) => {
-        window.audioManager.sfxEnabled = e.target.checked;
-      });
-      voiceToggle.addEventListener('change', (e) => {
-        window.audioManager.voiceEnabled = e.target.checked;
+      voiceToggle?.addEventListener('change', (e) => {
+        window.audioManager.setVoiceEnabled(e.target.checked);
       });
 
-      // 背景音樂 (BGM) 控制綁定
+      // === 背景音樂 (BGM) 控制事件（記憶使用者上次設定） ===
       const bgmToggle = document.getElementById('bgmToggle');
+      const pauseBgmToggle = document.getElementById('pauseBgmToggle');
       const bgmVolumeSlider = document.getElementById('bgmVolumeSlider');
       const quickBgmBtn = document.getElementById('quickBgmBtn');
 
       bgmToggle?.addEventListener('change', (e) => {
+        window.audioManager.setBGMEnabled(e.target.checked);
+      });
+      pauseBgmToggle?.addEventListener('change', (e) => {
         window.audioManager.setBGMEnabled(e.target.checked);
       });
 
@@ -463,8 +493,8 @@
         window.audioManager.toggleBGM();
       });
 
-      // 初始同步音訊 UI 狀態
-      window.audioManager.updateBgmUI();
+      // 載入時立即依據記憶設定同步所有音訊 UI 狀態
+      window.audioManager.updateAudioUI();
 
       // 渲染五十音速查表 Modal 內容
       const kanaCheatContent = document.getElementById('kanaCheatContent');
