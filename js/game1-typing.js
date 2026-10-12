@@ -654,7 +654,10 @@ class KanaTypingGame {
       matchedRomaji: null,
       hue: item.isWord ? 45 : (item.displayKana.charCodeAt(0) * 17) % 360,
       hitShake: 0,
-      crossedAlertLine: false
+      crossedAlertLine: false,
+      spawnTime: performance.now(),
+      firstInputTime: null,
+      typoCount: 0
     };
 
     this.targets.push(target);
@@ -667,6 +670,10 @@ class KanaTypingGame {
 
     // 1. 如果已有鎖定目標
     if (this.lockedTarget) {
+      if (!this.lockedTarget.firstInputTime) {
+        this.lockedTarget.firstInputTime = performance.now();
+      }
+
       const nextTyped = this.lockedTarget.currentTyped + char;
       // 檢查是否符合鎖定目標的任一可能拼音前綴
       const validMatches = this.lockedTarget.romajiList.filter(r => r.startsWith(nextTyped));
@@ -688,7 +695,8 @@ class KanaTypingGame {
         this.updateHUD();
         return;
       } else {
-        // 在已鎖定目標時按錯
+        // 在已鎖定目標時按錯（核心線索：記錄該假名拼寫失誤）
+        this.lockedTarget.typoCount++;
         this.onTypingMistake();
         return;
       }
@@ -702,6 +710,7 @@ class KanaTypingGame {
 
     if (candidates.length > 0) {
       const target = candidates[0];
+      target.firstInputTime = performance.now();
       this.lockedTarget = target;
       this.correctTyped++;
       target.currentTyped = char;
@@ -793,6 +802,22 @@ class KanaTypingGame {
     // 從陣列中移除
     this.targets = this.targets.filter(t => t.id !== target.id);
 
+    // 🧠 弱點歷時與拼寫分析：計算從輸入第一個音到擊破的時間 (inputDuration) 及過程敲錯次數 (typoCount)
+    const inputDuration = target.firstInputTime ? (performance.now() - target.firstInputTime) : 0;
+    const romajiLen = target.matchedRomaji ? target.matchedRomaji.length : 1;
+    const isHesitant = (romajiLen >= 2 && inputDuration > 1200) || (target.isWord && inputDuration > 2200);
+
+    // 若擊破過程中有拼寫按錯或明顯遲疑，記錄為待溫習的弱點項目（即使成功擊破仍值得加強）
+    if ((target.typoCount && target.typoCount > 0) || isHesitant) {
+      this.recordWeakness(target, {
+        breached: false,
+        prioritizationDelay: false,
+        typoCount: target.typoCount || 0,
+        duration: inputDuration,
+        hesitation: isHesitant
+      });
+    }
+
     this.updateHUD();
 
     // 檢查是否達成通關條件（只有完美擊破數累計達到 stageTargetCount 才通關）
@@ -835,15 +860,20 @@ class KanaTypingGame {
     }
     this.createFloatingText(target.x + target.width / 2, target.y, '💔 漏接扣心！字卡回流重測', '#ef4444');
 
-    // 記錄到失誤清單，方便賽後複習
-    if (!this.mistakeList.some(m => m.displayKana === target.displayKana)) {
-      this.mistakeList.push({
-        displayKana: target.displayKana,
-        subText: target.subText,
-        romaji: target.romajiList.join(' / '),
-        meaning: target.isWord ? target.subText : ''
-      });
-    }
+    // 辨析突破防線的主因：
+    // 1. 若玩家從未嘗試敲擊任何字母即觸底 -> 優先級延誤 (迎擊不及 / 敵艦過多造成排隊延遲)
+    // 2. 若玩家有輸入但按錯或卡住很久 -> 拼寫不熟 / 反射遲緩造成失守 (真正的弱點)
+    const neverTargeted = !target.firstInputTime;
+    const inputDuration = target.firstInputTime ? (performance.now() - target.firstInputTime) : 0;
+    const isHesitant = target.firstInputTime ? (inputDuration > 1000) : false;
+
+    this.recordWeakness(target, {
+      breached: true,
+      prioritizationDelay: neverTargeted,
+      typoCount: target.typoCount || 0,
+      duration: inputDuration,
+      hesitation: isHesitant
+    });
 
     if (this.lockedTarget && this.lockedTarget.id === target.id) {
       this.lockedTarget = null;
@@ -854,6 +884,78 @@ class KanaTypingGame {
 
     if (this.lives <= 0) {
       this.gameOver();
+    }
+  }
+
+  // 記錄並更新弱點評估資料庫（本局即時 + 長期歷史持久化）
+  recordWeakness(target, info) {
+    const key = target.displayKana;
+    let existing = this.mistakeList.find(m => m.displayKana === key);
+
+    if (!existing) {
+      existing = {
+        displayKana: target.displayKana,
+        subText: target.subText,
+        romaji: target.romajiList.join(' / '),
+        meaning: target.isWord ? target.subText : '',
+        typoCount: 0,
+        maxDuration: 0,
+        hasTypo: false,
+        hasHesitation: false,
+        hasBreach: false,
+        isPrioritizationDelay: false,
+        historyStats: this.getWeaknessHistory(key)
+      };
+      this.mistakeList.push(existing);
+    }
+
+    if (info.typoCount && info.typoCount > 0) {
+      existing.typoCount += info.typoCount;
+      existing.hasTypo = true;
+    }
+    if (info.duration && info.duration > existing.maxDuration) {
+      existing.maxDuration = info.duration;
+    }
+    if (info.hesitation) {
+      existing.hasHesitation = true;
+    }
+    if (info.breached) {
+      existing.hasBreach = true;
+      if (info.prioritizationDelay) {
+        existing.isPrioritizationDelay = true;
+      }
+    }
+
+    // 更新 localStorage 長期累計（排除單次手滑，累計真實弱點）
+    this.updateWeaknessHistory(key, info);
+    existing.historyStats = this.getWeaknessHistory(key);
+  }
+
+  // 取得長期弱點統計
+  getWeaknessHistory(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem('kana_learning_analytics') || '{}');
+      return data[key] || { totalTypos: 0, totalHesitations: 0, totalBreaches: 0, totalEncountered: 0 };
+    } catch {
+      return { totalTypos: 0, totalHesitations: 0, totalBreaches: 0, totalEncountered: 0 };
+    }
+  }
+
+  // 更新長期弱點統計
+  updateWeaknessHistory(key, info) {
+    try {
+      const data = JSON.parse(localStorage.getItem('kana_learning_analytics') || '{}');
+      if (!data[key]) {
+        data[key] = { totalTypos: 0, totalHesitations: 0, totalBreaches: 0, totalEncountered: 0 };
+      }
+      data[key].totalEncountered = (data[key].totalEncountered || 0) + 1;
+      if (info.typoCount) data[key].totalTypos = (data[key].totalTypos || 0) + info.typoCount;
+      if (info.hesitation) data[key].totalHesitations = (data[key].totalHesitations || 0) + 1;
+      if (info.breached) data[key].totalBreaches = (data[key].totalBreaches || 0) + 1;
+      data[key].lastUpdated = Date.now();
+      localStorage.setItem('kana_learning_analytics', JSON.stringify(data));
+    } catch (e) {
+      console.warn('Analytics storage error:', e);
     }
   }
 
@@ -885,26 +987,58 @@ class KanaTypingGame {
     if (finalComboEl) finalComboEl.textContent = this.maxCombo;
     if (finalAccEl) finalAccEl.textContent = `${accuracy}%`;
 
-    // 渲染弱點複習清單
+    // 渲染弱點複習清單（依認知嚴重程度排序）
     const reviewContainer = document.getElementById('mistakeReviewList');
     if (reviewContainer) {
       if (this.mistakeList.length === 0) {
-        reviewContainer.innerHTML = '<p class="text-emerald-400 py-3 text-center">太神了！本局零失誤完全防守！🎯</p>';
+        reviewContainer.innerHTML = '<p class="text-emerald-400 py-3 text-center font-medium">太神了！本局零失誤完全防守！🎯</p>';
       } else {
-        reviewContainer.innerHTML = this.mistakeList.map(item => `
-          <div class="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-900/40 border border-slate-700/30 hover:border-cyan-500/35 transition">
-            <div class="flex items-center gap-3">
-              <span class="text-xl sm:text-2xl font-bold text-amber-300 font-jp">${item.displayKana}</span>
-              <div>
-                <div class="text-xs sm:text-sm font-semibold text-cyan-300">${item.romaji}</div>
-                ${item.meaning ? `<div class="text-[11px] text-slate-400">${item.meaning}</div>` : ''}
+        // 依弱點嚴重程度排序：真實拼寫錯誤 > 猶豫卡住 > 突破防線 > 迎擊延誤
+        const sortedList = [...this.mistakeList].sort((a, b) => {
+          const scoreA = (a.typoCount * 40) + (a.hasHesitation ? 25 : 0) + (a.hasBreach && !a.isPrioritizationDelay ? 35 : 0) + (a.isPrioritizationDelay ? 5 : 0);
+          const scoreB = (b.typoCount * 40) + (b.hasHesitation ? 25 : 0) + (b.hasBreach && !b.isPrioritizationDelay ? 35 : 0) + (b.isPrioritizationDelay ? 5 : 0);
+          return scoreB - scoreA;
+        });
+
+        reviewContainer.innerHTML = sortedList.map(item => {
+          const badges = [];
+          if (item.typoCount > 0) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/35 font-medium">❌ 拼錯 ${item.typoCount} 次</span>`);
+          }
+          if (item.hasHesitation) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/35 font-medium">⏳ 猶豫 ${(item.maxDuration / 1000).toFixed(1)}s</span>`);
+          }
+          if (item.hasBreach) {
+            if (item.isPrioritizationDelay) {
+              badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 font-medium">🚨 迎擊延誤</span>`);
+            } else {
+              badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/35 font-medium">💔 突破防線</span>`);
+            }
+          }
+          const history = item.historyStats || {};
+          const totalHistoryFails = (history.totalTypos || 0) + (history.totalBreaches || 0);
+          if (totalHistoryFails > 1) {
+            badges.push(`<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 font-mono">歷次累計 ${totalHistoryFails} 次</span>`);
+          }
+
+          return `
+            <div class="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-900/40 border border-slate-700/30 hover:border-cyan-500/35 transition">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="text-xl sm:text-2xl font-bold text-amber-300 font-jp shrink-0">${item.displayKana}</span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span class="text-xs sm:text-sm font-semibold text-cyan-300 font-mono">${item.romaji}</span>
+                    <div class="flex gap-1 flex-wrap">${badges.join('')}</div>
+                  </div>
+                  ${item.meaning ? `<div class="text-[11px] text-slate-400 truncate">${item.meaning}</div>` : ''}
+                </div>
               </div>
+              <button onclick="window.audioManager.speak('${item.displayKana}')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800/60 hover:bg-cyan-600/80 border border-slate-700/40 text-white flex items-center gap-1 transition shrink-0 ml-2" title="點擊聆聽真人發音">
+                🔊 發音
+              </button>
             </div>
-            <button onclick="window.audioManager.speak('${item.displayKana}')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800/60 hover:bg-cyan-600/80 border border-slate-700/40 text-white flex items-center gap-1 transition" title="點擊聆聽真人發音">
-              🔊 發音
-            </button>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 

@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>👾 Kana Invaders (假名特攻隊) v1.4.2 - 日語闖關防衛戰</title>
+  <title>👾 Kana Invaders (假名特攻隊) v1.4.3 - 日語闖關防衛戰</title>
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
   <!-- Tailwind CSS CDN -->
@@ -19,7 +19,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=1.4.2">
+  <link rel="stylesheet" href="css/style.css?v=1.4.3">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
@@ -34,7 +34,7 @@
           <h1 class="text-base font-bold tracking-wide text-white flex items-center gap-2">
             Kana Invaders
             <span class="text-xs text-slate-300 font-medium">假名特攻隊</span>
-            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.4.2</span>
+            <span id="appVersion" class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">v1.4.3</span>
           </h1>
         </div>
       </div>
@@ -240,11 +240,11 @@
             <div class="mb-4">
               <div class="flex items-center justify-between mb-2">
                 <h4 class="text-xs font-bold text-amber-400 flex items-center gap-1">
-                  <span>📝</span> 本局突破防線的弱點清單（點擊發音溫習）：
+                  <span>📝</span> 本局弱點診斷清單（拼寫失誤 · 反應遲疑 · 突破防線）：
                 </h4>
                 <span id="finalDefeated" class="text-xs text-slate-400">擊破數: 0</span>
               </div>
-              <div id="mistakeReviewList" class="max-h-40 overflow-y-auto space-y-1.5 pr-1 text-xs">
+              <div id="mistakeReviewList" class="max-h-48 overflow-y-auto space-y-1.5 pr-1 text-xs">
                 <!-- 動態填充 -->
               </div>
             </div>
@@ -402,14 +402,14 @@
   </div>
 
   <!-- 腳本引入（附帶版本防快取） -->
-  <script src="js/data/kana.js?v=1.4.2"></script>
-  <script src="js/data/words.js?v=1.4.2"></script>
-  <script src="js/data/stages.js?v=1.4.2"></script>
-  <script src="js/audio.js?v=1.4.2"></script>
-  <script src="js/game1-typing.js?v=1.4.2"></script>
+  <script src="js/data/kana.js?v=1.4.3"></script>
+  <script src="js/data/words.js?v=1.4.3"></script>
+  <script src="js/data/stages.js?v=1.4.3"></script>
+  <script src="js/audio.js?v=1.4.3"></script>
+  <script src="js/game1-typing.js?v=1.4.3"></script>
 
   <script>
-    console.log('%c👾 Kana Invaders (假名特攻隊) v1.4.2 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
+    console.log('%c👾 Kana Invaders (假名特攻隊) v1.4.3 loaded', 'color: #06b6d4; font-weight: bold; font-size: 13px;');
 
     // 遊戲主流程與 UI 互動事件綁定
     window.addEventListener('DOMContentLoaded', () => {
